@@ -9,8 +9,7 @@
 <p align="center">
   <a href="https://sampai-apu.web.app"><b>Live demo</b></a> ·
   <a href="https://sampai-apu.web.app/sim">Simulator</a> ·
-  <a href="https://sampai-apu.web.app/admin">Dashboard</a> ·
-  <a href="docs/PITCH.md">Pitch brief</a>
+  <a href="https://sampai-apu.web.app/admin">Dashboard</a>
 </p>
 
 Sampai (Malay for *arrived*) is a commute app that gets APU students to class on public transport. It plans every trip around the student's real APSpace class, compares every way to campus (LRT, Rapid KL bus, the APU shuttle, walking or a taxi), watches the trip with live sources, and when the trip goes wrong anyway, writes a sourced incident report the lecturer can verify.
@@ -80,7 +79,6 @@ Getting to APU on public transport is a daily gamble.
 | `shared/` | Types, rail network, time helpers, server clients (Firebase, Gemini, OSRM, APSpace), what-to-bring rules |
 | `data/` | `build-segments.ts` turns Prasarana GTFS into rail segments and bus lines; `local_rules.json` holds local fixes |
 | `infra/` | Google Cloud setup and Cloud Run deploy scripts |
-| `docs/` | Pitch brief, submission summary, deployment handoff |
 
 ## Run it locally
 
@@ -105,7 +103,7 @@ With no Firebase settings everything runs on local emulators (project `demo-samp
 ## Deploy
 
 - **Web:** Firebase Hosting at https://sampai-apu.web.app. Settings come from `web/.env.production` (git-ignored). `npx firebase-tools login`, then `npm run deploy:web`. Rules and indexes: `npm run deploy:rules`.
-- **api and worker:** `render.yaml` (free plan, step by step in [docs/render-handoff.md](docs/render-handoff.md)), or Cloud Run with the `Dockerfile`s and `infra/deploy.sh` on the Blaze plan.
+- **api and worker:** `render.yaml` (Render free plan: add a `firebase-sa.json` secret file and `GEMINI_API_KEY`), or Cloud Run with the `Dockerfile`s and `infra/deploy.sh` on the Blaze plan.
 
 ## Privacy
 

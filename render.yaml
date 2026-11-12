@@ -1,6 +1,5 @@
 # Render blueprint: api + worker on Render's free plan (Firebase stays on the free Spark plan).
 # Render dashboard > New > Blueprint > pick this repo. Then fill the env vars marked sync: false.
-# Full steps: docs/render-handoff.md
 services:
   - type: web
     name: sampai-api

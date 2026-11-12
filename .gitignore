@@ -12,3 +12,7 @@ ui-debug.log
 .DS_Store
 .emulator-data/
 *.tsbuildinfo
+
+# internal team notes (pitch brief, deploy handoff, design-tool context)
+internal/
+UsersPublicsampai-tmp/
