@@ -204,7 +204,7 @@ export default function Sim() {
   return (
     <div className="flex h-full flex-col">
       <OpsBar
-        right={
+        badge={
           <span className="inline-flex h-7 items-center rounded-md bg-warn-fill px-2.5 text-xs font-extrabold uppercase tracking-[0.12em] text-fg">Simulated</span>
         }
       />
