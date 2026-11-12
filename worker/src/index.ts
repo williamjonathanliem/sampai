@@ -62,10 +62,13 @@ app.post("/pubsub/incidents", async (req, res) => {
 });
 
 // ---- Scheduled polls (Cloud Scheduler) ----
-app.post("/poll/bus", async (_req, res) => res.json(await pollBus()));
+app.post("/poll/bus", async (_req, res) => pollBus().then((r) => res.json(r), (e) => res.status(500).json({ error: e.message })));
 app.post("/poll/weather", async (_req, res) => {
-  const c = await pollWeather();
-  res.json(c);
+  try {
+    res.json(await pollWeather());
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
 });
 app.post("/load/gtfs", (_req, res) => res.json({ ok: true, note: "Network data is built offline with `npm run data` and bundled; redeploy to refresh." }));
 
