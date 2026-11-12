@@ -1,0 +1,27 @@
+{
+  "name": "api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --clear-screen=false --include=.env --env-file-if-exists=.env src/index.ts",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --format=esm --outfile=dist/index.js --packages=external --loader:.json=json",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@google-cloud/bigquery": "^7.9.1",
+    "@google-cloud/pubsub": "^4.9.0",
+    "@google/genai": "^1.30.0",
+    "@turf/turf": "^7.1.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "firebase-admin": "^13.0.1",
+    "pdfkit": "^0.15.1",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/pdfkit": "^0.13.5",
+    "@types/qrcode": "^1.5.5"
+  }
+}

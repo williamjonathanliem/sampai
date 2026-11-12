@@ -1,0 +1,153 @@
+{
+  "grabFare": {
+    "base": 4,
+    "perKm": 1,
+    "perMin": 0.3,
+    "min": 6,
+    "surgeWhenRaining": 1.4
+  },
+  "apu": {
+    "name": "APU, Technology Park Malaysia",
+    "lat": 3.055899,
+    "lon": 101.699959
+  },
+  "shuttleStopName": "LRT - Bukit Jalil",
+  "walkSpeedMps": 1.25,
+  "demoProfiles": [
+    {
+      "id": "aina",
+      "displayName": "Aina",
+      "lang": "en",
+      "blurb": "Lives near Awan Besar LRT. Sri Petaling line to Bukit Jalil, then APU shuttle.",
+      "homeLocation": {
+        "lat": 3.0648,
+        "lon": 101.6689,
+        "label": "Taman Sri Endah"
+      },
+      "route": {
+        "legs": [
+          {
+            "mode": "walk",
+            "from": "home",
+            "to": "SP19",
+            "minutes": 7
+          },
+          {
+            "mode": "rail",
+            "lineId": "PH",
+            "fromStop": "SP19",
+            "toStop": "SP17",
+            "minutes": 5
+          },
+          {
+            "mode": "shuttle",
+            "label": "APU shuttle",
+            "from": "SP17",
+            "to": "APU",
+            "minutes": 8
+          }
+        ]
+      },
+      "classes": [
+        {
+          "day": 0,
+          "start": "09:00",
+          "title": "Requirements Engineering",
+          "lecturer": "Lecturer",
+          "room": "B-04-02"
+        }
+      ]
+    },
+    {
+      "id": "farid",
+      "displayName": "Farid",
+      "lang": "ms",
+      "blurb": "Commutes from Puchong. Sri Petaling line from IOI Puchong Jaya to Bukit Jalil, then walks.",
+      "homeLocation": {
+        "lat": 3.0466,
+        "lon": 101.6195,
+        "label": "Puchong Jaya"
+      },
+      "route": {
+        "legs": [
+          {
+            "mode": "walk",
+            "from": "home",
+            "to": "SP24",
+            "minutes": 6
+          },
+          {
+            "mode": "rail",
+            "lineId": "PH",
+            "fromStop": "SP24",
+            "toStop": "SP17",
+            "minutes": 17
+          },
+          {
+            "mode": "walk",
+            "label": "Walk to APU",
+            "from": "SP17",
+            "to": "APU",
+            "minutes": 15,
+            "walkId": "bj-covered"
+          }
+        ]
+      },
+      "classes": [
+        {
+          "day": 0,
+          "start": "10:45",
+          "title": "Database Systems",
+          "lecturer": "Lecturer",
+          "room": "D-07-03"
+        }
+      ]
+    },
+    {
+      "id": "weijie",
+      "displayName": "Wei Jie",
+      "lang": "en",
+      "blurb": "Already cutting it close: class starts in about 12 minutes. Every reroute arrives late, so use this profile to demo delay notices.",
+      "homeLocation": {
+        "lat": 3.0552,
+        "lon": 101.6578,
+        "label": "Alam Sutera"
+      },
+      "route": {
+        "legs": [
+          {
+            "mode": "walk",
+            "from": "home",
+            "to": "SP21",
+            "minutes": 5
+          },
+          {
+            "mode": "rail",
+            "lineId": "PH",
+            "fromStop": "SP21",
+            "toStop": "SP17",
+            "minutes": 9
+          },
+          {
+            "mode": "shuttle",
+            "label": "APU shuttle",
+            "from": "SP17",
+            "to": "APU",
+            "minutes": 8
+          }
+        ]
+      },
+      "classes": [
+        {
+          "day": 0,
+          "start": "09:00",
+          "inMin": 12,
+          "title": "Software Architecture",
+          "lecturer": "Lecturer",
+          "room": "E-07-04"
+        }
+      ],
+      "late": true
+    }
+  ]
+}

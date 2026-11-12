@@ -1,0 +1,16 @@
+{
+  "_note": "APU shuttle pick-up points. Names match APSpace transix trip_from.name. Coordinates for hostels were geocoded from APSpace addresses (OpenStreetMap); approx=true where the match is uncertain. Bayu Jalil and 'Fortune Park (One South Only)' are left out until someone confirms their location.",
+  "stops": [
+    { "name": "LRT - Bukit Jalil", "label": "LRT Bukit Jalil", "lat": 3.058954, "lon": 101.691717 },
+    { "name": "Parkhill", "label": "Parkhill Residence", "lat": 3.05614, "lon": 101.69574 },
+    { "name": "Fortune Park", "label": "Fortune Park, Serdang Perdana", "lat": 3.03658, "lon": 101.7075 },
+    { "name": "City of Green", "label": "City of Green, Bukit Serdang", "lat": 3.04029, "lon": 101.7009 },
+    { "name": "Bloomsvale", "label": "Bloomsvale, Jalan Puchong", "lat": 3.07589, "lon": 101.66064 },
+    { "name": "M Vertica", "label": "M Vertica, Cheras", "lat": 3.11265, "lon": 101.72934 },
+    { "name": "Kuchai Sentral", "label": "Kuchai Sentral", "lat": 3.0895, "lon": 101.68458 },
+    { "name": "D'IVO", "label": "D'Ivo Residences, Kuchai Lama", "lat": 3.08715, "lon": 101.67272 },
+    { "name": "Harmony", "label": "Harmony, Bandar Kinrara", "lat": 3.03602, "lon": 101.6468, "approx": true },
+    { "name": "Kingston Hotel", "label": "Kingston Hotel", "lat": 3.14494, "lon": 101.70656, "approx": true },
+    { "name": "Maple", "label": "Maple", "lat": 3.14481, "lon": 101.69868, "approx": true }
+  ]
+}

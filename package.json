@@ -1,0 +1,28 @@
+{
+  "name": "sampai",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "workspaces": ["api", "worker", "web"],
+  "scripts": {
+    "data": "tsx data/build-segments.ts",
+    "emulators": "node scripts/emulators.mjs",
+    "dev:api": "npm run dev -w api",
+    "dev:worker": "npm run dev -w worker",
+    "dev:web": "npm run dev -w web",
+    "dev": "concurrently -n emu,worker,api,web -c gray,magenta,cyan,green \"npm:emulators\" \"npm:dev:worker\" \"npm:dev:api\" \"npm:dev:web\""
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/node": "^22.10.0",
+    "adm-zip": "^0.5.16",
+    "concurrently": "^9.1.0",
+    "csv-parse": "^5.6.0",
+    "esbuild": "^0.24.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@turf/turf": "^7.1.0"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --clear-screen=false --include=.env --env-file-if-exists=.env src/index.ts",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --format=esm --outfile=dist/index.js --packages=external --loader:.json=json",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@google-cloud/bigquery": "^7.9.1",
+    "@google-cloud/pubsub": "^4.9.0",
+    "@google/genai": "^1.30.0",
+    "@turf/turf": "^7.1.0",
+    "express": "^4.21.2",
+    "firebase-admin": "^13.0.1",
+    "gtfs-realtime-bindings": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0"
+  }
+}

@@ -1,0 +1,122 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  /* neutrals, tinted toward violet */
+  --color-bg: oklch(0.972 0.005 285);
+  --color-surface: oklch(0.995 0.002 285);
+  --color-sunken: oklch(0.948 0.007 285);
+  --color-line: oklch(0.905 0.009 285);
+  --color-line-strong: oklch(0.83 0.012 285);
+  --color-fg: oklch(0.23 0.025 285);
+  --color-muted: oklch(0.5 0.018 285);
+  --color-faint: oklch(0.64 0.014 285);
+
+  /* brand */
+  --color-brand: oklch(0.47 0.18 290);
+  --color-brand-hover: oklch(0.41 0.17 290);
+  --color-brand-soft: oklch(0.945 0.035 290);
+
+  /* semantic */
+  --color-go: oklch(0.5 0.12 155);
+  --color-go-soft: oklch(0.955 0.04 155);
+  --color-stop: oklch(0.53 0.19 25);
+  --color-stop-hover: oklch(0.47 0.18 25);
+  --color-stop-soft: oklch(0.955 0.03 25);
+  --color-warn: oklch(0.52 0.12 65);
+  --color-warn-soft: oklch(0.96 0.05 85);
+  --color-warn-fill: oklch(0.86 0.15 88);
+  --color-rain: oklch(0.5 0.13 245);
+  --color-rain-soft: oklch(0.955 0.03 245);
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+html, body, #root { height: 100%; }
+body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  text-rendering: optimizeLegibility;
+}
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* focus */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+/* press feedback */
+.press { transition: transform 160ms var(--ease-out), background-color 150ms ease, border-color 150ms ease, color 150ms ease; }
+.press:active:not(:disabled) { transform: scale(0.97); }
+
+/* leaflet */
+.leaflet-container { background: var(--color-sunken); font-family: var(--font-sans); }
+.leaflet-control-attribution { background: color-mix(in oklch, var(--color-surface) 85%, transparent) !important; color: var(--color-faint) !important; font-size: 10px; }
+.leaflet-control-attribution a { color: var(--color-muted) !important; }
+.leaflet-tooltip { background: var(--color-fg); color: var(--color-surface); border: 0; border-radius: 8px; box-shadow: none; font-weight: 600; font-size: 12px; padding: 4px 8px; }
+.leaflet-tooltip-top:before { border-top-color: var(--color-fg); }
+.leaflet-tooltip-bottom:before { border-bottom-color: var(--color-fg); }
+.leaflet-tooltip-left:before { border-left-color: var(--color-fg); }
+.leaflet-tooltip-right:before { border-right-color: var(--color-fg); }
+
+/* the only looping motion: a live stalled segment */
+@keyframes pulse-stop { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }
+.pulse-stop { animation: pulse-stop 1.2s ease-in-out infinite; }
+
+/* bottom sheet */
+.sheet-backdrop { transition: opacity 240ms ease; }
+.sheet-panel { transition: transform 320ms var(--ease-drawer); }
+@starting-style {
+  .sheet-backdrop { opacity: 0; }
+  .sheet-panel { transform: translateY(100%); }
+}
+/* on wider screens the sheet is a centered dialog: fade + slight rise, from center */
+@media (min-width: 640px) {
+  .sheet-panel { transition: transform 220ms var(--ease-out), opacity 220ms var(--ease-out); }
+  @starting-style {
+    .sheet-panel { transform: translateY(8px) scale(0.98); opacity: 0; }
+  }
+}
+
+/* new alert: one short nudge, not a loop */
+@keyframes nudge { 0% { transform: translateY(6px); opacity: 0 } 100% { transform: none; opacity: 1 } }
+.enter { animation: nudge 260ms var(--ease-out); }
+
+.sim-stripes { background: repeating-linear-gradient(-45deg, var(--color-warn-fill), var(--color-warn-fill) 10px, var(--color-fg) 10px, var(--color-fg) 20px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-stop, .enter { animation: none; }
+  .sheet-panel { transition: none; }
+  .press:active:not(:disabled) { transform: none; }
+}
+
+/* ---------- landing: stall scene (9 s loop) ---------- */
+.scene-rider { fill: var(--color-go); stroke: var(--color-brand); stroke-width: 4; animation: rider 9s var(--ease-out) infinite, rider-color 9s linear infinite; }
+.scene-rider-0 { --to: 286px; }
+.scene-rider-1 { --to: 324px; animation-delay: 0.15s; }
+.scene-rider-2 { --to: 362px; animation-delay: 0.3s; }
+@keyframes rider {
+  0% { transform: translateX(0); opacity: 0; }
+  6% { opacity: 1; }
+  40%, 92% { transform: translateX(var(--to)); opacity: 1; }
+  100% { transform: translateX(var(--to)); opacity: 0; }
+}
+@keyframes rider-color { 0%, 42% { fill: var(--color-go); } 46%, 100% { fill: var(--color-stop); } }
+.scene-stall { opacity: 0; animation: stall 9s linear infinite; }
+@keyframes stall { 0%, 44% { opacity: 0; } 48%, 54%, 62%, 70%, 78%, 86% { opacity: 1; } 51%, 58%, 66%, 74%, 82% { opacity: .55; } 92%, 100% { opacity: 0; } }
+.scene-alert { opacity: 0; animation: alert 9s var(--ease-out) infinite; }
+@keyframes alert { 0%, 52% { opacity: 0; transform: translateY(14px) scale(.98); } 57%, 93% { opacity: 1; transform: none; } 97%, 100% { opacity: 0; transform: translateY(-6px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-rider, .scene-stall, .scene-alert { animation: none; }
+  .scene-rider { fill: var(--color-stop); transform: translateX(var(--to)); }
+  .scene-stall, .scene-alert { opacity: 1; }
+}

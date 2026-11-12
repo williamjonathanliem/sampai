@@ -1,0 +1,152 @@
+{
+  "_note": "Fallback reroutes per segment, used when the Routes API is unavailable or every Google alternative uses the stalled segment. extraMinutes is added to the normal trip time.",
+  "PH:SP19>SP18": [
+    {
+      "id": "bus-t580",
+      "type": "bus",
+      "label": "Bus T580 from Awan Besar LRT to TPM (APU)",
+      "detail": "Exit at Awan Besar, stop KL2324. T580 runs Awan Besar → Bukit Jalil LRT → TPM.",
+      "extraMinutes": 14
+    },
+    {
+      "id": "grab-awan-besar",
+      "type": "grab",
+      "label": "Grab from Awan Besar LRT",
+      "from": {
+        "lat": 3.062131,
+        "lon": 101.670555
+      },
+      "extraMinutes": 6
+    },
+    {
+      "id": "walk-bj-covered",
+      "type": "walk",
+      "label": "Walk from Sri Petaling via covered path",
+      "walkId": "bj-covered",
+      "extraMinutes": 28
+    }
+  ],
+  "PH:SP18>SP17": [
+    {
+      "id": "bus-t580",
+      "type": "bus",
+      "label": "Bus T580 from Awan Besar LRT to TPM (APU)",
+      "detail": "Get off at Awan Besar, stop KL2324. T580 runs Awan Besar → Bukit Jalil LRT → TPM, skipping the stalled stretch.",
+      "extraMinutes": 12
+    },
+    {
+      "id": "grab-sri-petaling",
+      "type": "grab",
+      "label": "Grab from Sri Petaling LRT",
+      "from": {
+        "lat": 3.061445,
+        "lon": 101.687074
+      },
+      "extraMinutes": 8
+    },
+    {
+      "id": "walk-bj-covered",
+      "type": "walk",
+      "label": "Walk from Sri Petaling via covered path",
+      "walkId": "bj-covered",
+      "extraMinutes": 20
+    }
+  ],
+  "PH:SP17>SP16": [
+    {
+      "id": "grab-sungai-besi",
+      "type": "grab",
+      "label": "Grab from Sungai Besi LRT",
+      "from": {
+        "lat": 3.063842,
+        "lon": 101.708062
+      },
+      "extraMinutes": 7
+    },
+    {
+      "id": "bus-t580-bj",
+      "type": "bus",
+      "label": "Bus T580 from Bukit Jalil LRT to TPM (APU)",
+      "extraMinutes": 10
+    },
+    {
+      "id": "walk-bj-covered",
+      "type": "walk",
+      "label": "Walk from Bukit Jalil via covered path",
+      "walkId": "bj-covered",
+      "extraMinutes": 15
+    }
+  ],
+  "PH:SP20>SP19": [
+    {
+      "id": "bus-651",
+      "type": "bus",
+      "label": "Bus 651 from Muhibbah LRT, then T580 from Awan Besar",
+      "extraMinutes": 18
+    },
+    {
+      "id": "grab-muhibbah",
+      "type": "grab",
+      "label": "Grab from Muhibbah LRT",
+      "from": {
+        "lat": 3.062229,
+        "lon": 101.662552
+      },
+      "extraMinutes": 9
+    },
+    {
+      "id": "walk-bj-covered",
+      "type": "walk",
+      "label": "Walk via covered path after Bukit Jalil",
+      "walkId": "bj-covered",
+      "extraMinutes": 35
+    }
+  ],
+  "_default": [
+    {
+      "id": "grab-nearest",
+      "type": "grab",
+      "label": "Grab from the nearest station",
+      "extraMinutes": 10
+    },
+    {
+      "id": "next-train",
+      "type": "wait",
+      "label": "Wait for service to resume",
+      "extraMinutes": 20
+    },
+    {
+      "id": "walk-bj-covered",
+      "type": "walk",
+      "label": "Walk the last stretch via covered path",
+      "walkId": "bj-covered",
+      "extraMinutes": 25
+    }
+  ],
+  "_weather": [
+    {
+      "id": "shuttle-covered",
+      "type": "shuttle",
+      "label": "APU shuttle from Bukit Jalil LRT",
+      "detail": "Wait under the station canopy instead of walking",
+      "extraMinutes": 3
+    },
+    {
+      "id": "walk-bj-covered",
+      "type": "walk",
+      "label": "Walk via the covered path",
+      "walkId": "bj-covered",
+      "extraMinutes": 6
+    },
+    {
+      "id": "grab-bukit-jalil",
+      "type": "grab",
+      "label": "Grab from Bukit Jalil LRT",
+      "from": {
+        "lat": 3.058196,
+        "lon": 101.692125
+      },
+      "extraMinutes": 4
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "walkId": "bj-covered", "name": "Covered / shaded walk: Bukit Jalil LRT to APU", "covered": true, "mock": true, "note": "Hand-drawn for the demo. Pitch: crowdsourced shade map." },
+      "geometry": { "type": "LineString", "coordinates": [[101.692125,3.058196],[101.6929,3.0577],[101.6941,3.0571],[101.6953,3.0566],[101.6962,3.0561],[101.6971,3.0558],[101.6982,3.0557],[101.6991,3.0558],[101.6999,3.0559]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "walkId": "bj-direct", "name": "Direct walk (exposed): Bukit Jalil LRT to APU", "covered": false, "mock": true },
+      "geometry": { "type": "LineString", "coordinates": [[101.692125,3.058196],[101.6936,3.0583],[101.6952,3.0580],[101.6968,3.0572],[101.6984,3.0563],[101.6999,3.0559]] }
+    }
+  ]
+}

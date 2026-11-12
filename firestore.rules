@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+
+    // Students own their profile and sessions (anonymous auth)
+    match /users/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+    match /sessions/{id} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && request.resource.data.uid == request.auth.uid;
+    }
+    // Server-written, readable by the app
+    match /incidents/{id} { allow read: if true; }
+    match /conditions/{id} { allow read: if true; }
+    match /live/{id} { allow read: if true; }
+    match /alerts/{id} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+    match /letters/{id} { allow read: if signedIn() && resource.data.uid == request.auth.uid; }
+  }
+}
