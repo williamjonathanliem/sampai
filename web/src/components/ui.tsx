@@ -115,7 +115,7 @@ export function OpsBar({ right, badge }: { right?: ReactNode; badge?: ReactNode 
     </NavLink>
   );
   return (
-    <header className="sticky top-0 z-[900] flex h-14 shrink-0 items-center gap-2 border-b border-line bg-surface px-4">
+    <header className="intro-drop sticky top-0 z-[900] flex h-14 shrink-0 items-center gap-2 border-b border-line bg-surface px-4">
       <Wordmark className="mr-3" />
       <nav className="hidden gap-1 md:flex">
         {link("/sim", "Simulator")}

@@ -196,3 +196,17 @@ details[open] .faq-chev { transform: rotate(45deg); }
   .intro, .intro-drop, .intro-pop { animation-name: intro-fade; animation-duration: 300ms; }
   .logo-dot-in { animation: none; }
 }
+
+/* children arrive one after another (operator pages, dashboard) */
+.intro-stagger > * { animation: intro-rise 700ms var(--ease-brand) both; animation-delay: calc(var(--d, 0ms) + var(--i, 0) * 70ms); }
+.intro-stagger > :nth-child(2) { --i: 1; }
+.intro-stagger > :nth-child(3) { --i: 2; }
+.intro-stagger > :nth-child(4) { --i: 3; }
+.intro-stagger > :nth-child(5) { --i: 4; }
+.intro-stagger > :nth-child(6) { --i: 5; }
+.intro-stagger > :nth-child(7) { --i: 6; }
+.intro-stagger > :nth-child(8) { --i: 7; }
+.intro-stagger > :nth-child(n + 9) { --i: 8; }
+@media (prefers-reduced-motion: reduce) {
+  .intro-stagger > * { animation-name: intro-fade; animation-duration: 300ms; }
+}
