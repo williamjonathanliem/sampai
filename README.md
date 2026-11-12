@@ -6,6 +6,8 @@ Sampai is a commute app for APU students in Kuala Lumpur. Riders' phones become 
 
 Built for the APU Cloud Innovation Hackathon 2026.
 
+**Making the pitch deck?** Start with [docs/PITCH.md](docs/PITCH.md): story, numbers, demo script, judge Q&A and slide outline.
+
 ## What it does
 
 | | |
