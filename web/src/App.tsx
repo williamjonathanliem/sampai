@@ -9,6 +9,28 @@ import IncidentPage from "./pages/Incident";
 import Profile from "./pages/Profile";
 import Landing from "./pages/Landing";
 import Ride from "./pages/Ride";
+import Brand from "./pages/Brand";
+import { Link } from "react-router-dom";
+import { Logo } from "./components/Logo";
+
+/** Branded 404: the route ends, with a way back. */
+function NotFound() {
+  return (
+    <div className="lp mx-auto flex min-h-full max-w-md flex-col justify-center px-4 py-24">
+      <Logo size={32} />
+      <h1 className="mt-8 heading-4">This stop isn't on the line</h1>
+      <p className="mt-2 body-3 text-muted">The page you opened doesn't exist. Head back and pick another route.</p>
+      <div className="mt-8 flex flex-wrap gap-3">
+        <Link to="/welcome" className="lp-press inline-flex min-h-11 items-center rounded-xl bg-brand px-3 py-2 button-md text-surface hover:bg-brand-hover">
+          Back to Sampai
+        </Link>
+        <Link to="/" className="lp-press inline-flex min-h-11 items-center rounded-xl px-3 py-2 button-md text-fg ring-1 ring-line hover:bg-sunken">
+          Open the app
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 /** A crash shows a way out instead of a blank screen. */
 class Boundary extends Component<{ children: ReactNode }, { error: Error | null }> {
@@ -47,6 +69,8 @@ export default function App() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/letter/:incidentId" element={<Letter />} />
         <Route path="/incident/:id" element={<IncidentPage />} />
+        <Route path="/brand" element={<Brand />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Boundary>
   );

@@ -8,6 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@phosphor-icons/react": "^2.1.7",
     "@turf/turf": "^7.1.0",
     "firebase": "^11.1.0",
     "leaflet": "^1.9.4",
