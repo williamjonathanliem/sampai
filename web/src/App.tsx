@@ -6,6 +6,7 @@ import Onboard from "./pages/Onboard";
 import Sim from "./pages/Sim";
 import Admin from "./pages/Admin";
 import Letter from "./pages/Letter";
+import Stage from "./pages/Stage";
 import IncidentPage from "./pages/Incident";
 import Profile from "./pages/Profile";
 import Landing from "./pages/Landing";
@@ -78,6 +79,7 @@ export default function App() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/letter/:incidentId" element={<Letter />} />
         <Route path="/report" element={<Letter />} />
+        <Route path="/stage" element={<Stage />} />
         <Route path="/incident/:id" element={<IncidentPage />} />
         <Route path="/brand" element={<Brand />} />
         <Route path="*" element={<NotFound />} />
