@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft, Check, Copy, DownloadSimple, X } from "@phosphor-icons/react";
+import { Check, Copy, DownloadSimple, X } from "@phosphor-icons/react";
 import { Logo, LogoMark } from "../components/Logo";
 import { Nav } from "../components/SiteNav";
 import { useReveal } from "../lib/useReveal";
+import { useMedia } from "../lib/useMedia";
 
 const colors = [
   { name: "Senja", role: "Primary", meaning: "Dusk violet, the colour of the evening commute. Buttons, selection, focus, the brand moments.", hex: "#5E3EB6", oklch: "oklch(0.47 0.18 290)", fg: "#FDFDFF" },
@@ -88,6 +88,7 @@ function Block({ id, title, body, children }: { id: string; title: string; body?
 }
 
 export default function Brand() {
+  const wide = useMedia("(min-width: 640px)"); // the big lockup is ~460px wide; phones get a smaller one
   const root = useRef<HTMLDivElement>(null);
   useReveal(root);
   useEffect(() => {
@@ -102,15 +103,8 @@ export default function Brand() {
     <div ref={root} className="lp min-h-full bg-bg text-fg">
       <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-6 lg:px-8">
         <Nav />
-        <header className="intro-drop flex items-center justify-between gap-4 py-6 lg:hidden">
-          <Link to="/welcome" className="lp-press inline-flex min-h-11 items-center gap-2 rounded-xl px-3 py-2 button-sm text-muted hover:bg-sunken hover:text-fg">
-            <ArrowLeft size={16} /> Back to Sampai
-          </Link>
-          <span className="caption-3 uppercase tracking-wider text-muted">Brand kit · v1 · Nov 2026</span>
-        </header>
-
-        <main className="lg:pt-24">
-          <section className="grid items-center gap-12 py-16 lg:grid-cols-2">
+        <main className="pt-20 lg:pt-24">
+          <section className="grid items-center gap-12 py-12 lg:grid-cols-2 lg:py-16 [&>*]:min-w-0">
             <div>
               <h1 className="heading-3 sm:heading-2 lg:heading-1">
                 <span className="intro hero-ink block w-fit" style={{ "--d": "80ms" } as CSSProperties}>Sampai means</span>
@@ -120,8 +114,8 @@ export default function Brand() {
                 Everything here points at one idea: you get there, and if you can't, you have proof. Calm, plain and decisive. No hype, no emoji, no jargon.
               </p>
             </div>
-            <div className="intro-pop flex items-center justify-center rounded-3xl bg-brand p-12 lg:p-16" style={{ "--d": "200ms" } as CSSProperties}>
-              <Logo size={88} onDark animated />
+            <div className="intro-pop flex items-center justify-center rounded-3xl bg-brand p-8 sm:p-12 lg:p-16" style={{ "--d": "200ms" } as CSSProperties}>
+              <Logo size={wide ? 88 : 56} onDark animated />
             </div>
           </section>
 
