@@ -41,18 +41,29 @@ async function metWarnings(): Promise<RealConditions["metWarnings"]> {
   }
 }
 
-async function openMeteo(): Promise<{ apparentTemp: number | null; rainProbNextHour: number | null }> {
+async function airQuality(): Promise<{ aqi: number | null; pm25: number | null }> {
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${APU.lat}&longitude=${APU.lon}&hourly=apparent_temperature,precipitation_probability&current=temperature_2m,apparent_temperature,precipitation&timezone=Asia/Kuala_Lumpur&forecast_days=2`;
+    const url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${APU.lat}&longitude=${APU.lon}&current=us_aqi,pm2_5&timezone=Asia/Kuala_Lumpur`;
+    const j: any = await (await fetch(url, { signal: AbortSignal.timeout(10_000) })).json();
+    return { aqi: j.current?.us_aqi ?? null, pm25: j.current?.pm2_5 ?? null };
+  } catch (e: any) {
+    console.warn(`[weather] air quality failed: ${e.message}`);
+    return { aqi: null, pm25: null };
+  }
+}
+
+async function openMeteo(): Promise<{ apparentTemp: number | null; rainProbNextHour: number | null; uv: number | null }> {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${APU.lat}&longitude=${APU.lon}&hourly=apparent_temperature,precipitation_probability&current=temperature_2m,apparent_temperature,precipitation,uv_index&timezone=Asia/Kuala_Lumpur&forecast_days=2`;
     const j: any = await (await fetch(url, { signal: AbortSignal.timeout(10_000) })).json();
     const nowIso = j.current?.time as string; // local time "2026-11-12T16:30"
     const hours: string[] = j.hourly?.time ?? [];
     const idx = Math.max(0, hours.findIndex((h) => h > nowIso) - 1);
     const probs: number[] = (j.hourly?.precipitation_probability ?? []).slice(idx, idx + 2);
-    return { apparentTemp: j.current?.apparent_temperature ?? null, rainProbNextHour: probs.length ? Math.max(...probs) : null };
+    return { apparentTemp: j.current?.apparent_temperature ?? null, rainProbNextHour: probs.length ? Math.max(...probs) : null, uv: j.current?.uv_index ?? null };
   } catch (e: any) {
     console.warn(`[weather] open-meteo failed: ${e.message}`);
-    return { apparentTemp: null, rainProbNextHour: null };
+    return { apparentTemp: null, rainProbNextHour: null, uv: null };
   }
 }
 
@@ -60,8 +71,8 @@ let lastWeather: any = null;
 export const weatherStats = () => lastWeather;
 
 export async function pollWeather() {
-  const [warnings, om] = await Promise.all([metWarnings(), openMeteo()]);
-  const real: RealConditions = { ...om, metWarnings: warnings, fetchedAt: Date.now() };
+  const [warnings, om, air] = await Promise.all([metWarnings(), openMeteo(), airQuality()]);
+  const real: RealConditions = { ...om, ...air, metWarnings: warnings, fetchedAt: Date.now() };
   const merged = await recomputeConditions({ real });
   await syncWeatherIncident(merged.metWarnings.find((w) => w.affectsKL) ?? null);
   lastWeather = { at: Date.now(), apparentTemp: om.apparentTemp, rainProb: om.rainProbNextHour, klWarnings: warnings.filter((w) => w.affectsKL).length };

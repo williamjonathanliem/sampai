@@ -239,7 +239,7 @@ export default function Admin() {
                                 placeholder="e.g. the MyRapid post about this disruption"
                                 className="w-full rounded-xl border border-line-strong bg-surface p-3 text-[14px] outline-none focus:border-brand focus:shadow-[0_0_0_3px_var(--color-brand-soft)]"
                               />
-                              <span className="mt-1 block text-xs text-muted">Gemini summarises it onto the incident. It then appears on delay letters and the public incident page.</span>
+                              <span className="mt-1 block text-xs text-muted">Gemini summarises it onto the incident. It then appears on incident reports and the public incident page.</span>
                             </label>
                             <div className="mt-3 flex gap-2">
                               <Button

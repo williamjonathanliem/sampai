@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState, type ReactNode } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { ArrowLeft, Download, ExternalLink, Sparkles, PencilLine, FileText } from "lucide-react";
 import { db } from "../lib/firebase";
@@ -10,8 +10,22 @@ import type { AlertDoc } from "../../../shared/types";
 import { fmtMyt } from "../../../shared/time";
 import { Badge, Button, ButtonLink, Field, Input, Segmented, SimTag, btn } from "../components/ui";
 
+function ReportSection({ n, title, children }: { n: number; title: string; children: ReactNode }) {
+  return (
+    <section className="mt-5">
+      <h3 className="mb-2 text-[12px] font-bold uppercase tracking-[0.08em] text-fg">
+        {n}. {title}
+      </h3>
+      {children}
+    </section>
+  );
+}
+
 export default function Letter() {
   const { incidentId } = useParams();
+  // /report (no incident): the student asked for a report without an alert; class comes from the query
+  const [qs] = useSearchParams();
+  const self = !incidentId;
   const nav = useNavigate();
   const desktop = useDesktop();
   const uid = useUid();
@@ -22,6 +36,7 @@ export default function Letter() {
   const [studentId, setStudentId] = useState("");
   const [lecturer, setLecturer] = useState("");
   const [lang, setLang] = useState<"en" | "ms">("en");
+  const [arrivedAt, setArrivedAt] = useState("");
   const [busy, setBusy] = useState(false);
   const [letter, setLetter] = useState<any>(null);
   const [err, setErr] = useState("");
@@ -45,9 +60,22 @@ export default function Letter() {
     setBusy(true);
     setErr("");
     try {
-      setLetter(await api("/letter", { uid, incidentId, studentName: name.trim() || "Student", studentId: studentId.trim() || undefined, lecturerName: lecturer.trim() || undefined, lang }));
+      setLetter(
+        await api("/letter", {
+          uid,
+          incidentId: incidentId ?? "self",
+          studentName: name.trim() || "Student",
+          studentId: studentId.trim() || undefined,
+          lecturerName: lecturer.trim() || qs.get("lecturer") || undefined,
+          classTitle: qs.get("class") || undefined,
+          classStart: qs.get("start") || undefined,
+          room: qs.get("room") || undefined,
+          arrivedAt: /^\d\d:\d\d$/.test(arrivedAt) ? arrivedAt : undefined,
+          lang,
+        }),
+      );
     } catch (e: any) {
-      setErr(`Couldn't generate the notice: ${e.message}. Check the api is running and try again.`);
+      setErr(`Couldn't generate the report: ${e.message}. Check the api is running and try again.`);
     } finally {
       setBusy(false);
     }
@@ -55,7 +83,7 @@ export default function Letter() {
 
   const form = (
     <div className="space-y-5">
-      <Field label="Your name" hint="Only printed on the letter. Not stored with your profile.">
+      <Field label="Your name" hint="Only printed on the report. Not stored with your profile.">
         <Input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
       </Field>
       <div className="grid gap-5 sm:grid-cols-2">
@@ -66,6 +94,9 @@ export default function Letter() {
           <Input value={lecturer} onChange={(e) => setLecturer(e.target.value)} placeholder="Lecturer" />
         </Field>
       </div>
+      <Field label="When did you arrive at APU?" hint="Optional. Leave empty and Sampai uses its own estimate, if it has one.">
+        <Input type="time" value={arrivedAt} onChange={(e) => setArrivedAt(e.target.value)} className="tnum" />
+      </Field>
       <Segmented
         value={lang}
         onChange={setLang}
@@ -74,14 +105,15 @@ export default function Letter() {
           { value: "ms", label: "Bahasa Melayu" },
         ]}
       />
-      <Button size="lg" className="w-full" disabled={!inc} loading={busy} onClick={generate} icon={<Sparkles size={18} />}>
-        {busy ? "Preparing notice" : letter ? "Regenerate notice" : "Generate notice"}
+      <Button size="lg" className="w-full" disabled={!self && !inc} loading={busy} onClick={generate} icon={<Sparkles size={18} />}>
+        {busy ? "Preparing report" : letter ? "Regenerate report" : "Generate report"}
       </Button>
-      {busy && <p className="text-center text-[13px] text-muted">Gemini is writing it from the incident record. This takes about 10 seconds.</p>}
+      {busy && <p className="text-center text-[13px] text-muted">{self ? "Sampai is checking the last 3 hours for disruptions, then Gemini writes it." : "Gemini is writing it from the incident record."} This takes about 10 seconds.</p>}
       {err && <p className="text-sm text-stop">{err}</p>}
     </div>
   );
 
+  const ms = letter?.lang === "ms";
   const preview = letter ? (
     <div>
       <article className="rounded-2xl border border-line bg-surface p-6 text-[14.5px] leading-[1.65] shadow-[0_1px_3px_oklch(0.23_0.025_285/0.06)] lg:p-10 lg:text-[15px]">
@@ -105,28 +137,53 @@ export default function Letter() {
         </div>
         <div className="mt-5 grid gap-4 text-[13.5px] sm:grid-cols-2">
           <div>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-faint">{letter.lang === "ms" ? "Kepada" : "To"}</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-faint">{ms ? "Disediakan untuk" : "Prepared for"}</div>
             <div className="mt-1 font-semibold">{letter.lecturerName || "Lecturer"}</div>
             {letter.classTitle && <div className="text-muted">{letter.classTitle}</div>}
           </div>
           <div>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-faint">{letter.lang === "ms" ? "Daripada" : "From"}</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-faint">{ms ? "Berkenaan" : "Concerning"}</div>
             <div className="mt-1 font-semibold">{letter.studentName}</div>
             <div className="text-muted">{[letter.studentId, letter.intake].filter(Boolean).join(" · ")}</div>
           </div>
         </div>
-        <p className="mt-6">{letter.lang === "ms" ? "Tuan/Puan," : `Dear ${letter.lecturerName || "Sir/Madam"},`}</p>
-        <p className="mt-3 border-b border-fg pb-1.5 font-bold uppercase leading-snug tracking-[0.01em]">{letter.subject}</p>
-        <div className="mt-4 max-w-[68ch] space-y-3 text-pretty">
-          {String(letter.body)
-            .split(/\n\s*\n/)
-            .map((p: string, i: number) => (
-              <p key={i}>{p.trim()}</p>
-            ))}
+        <h2 className="mt-6 border-b border-fg pb-1.5 text-[16px] font-bold leading-snug">{letter.subject}</h2>
+        <div className="max-w-[68ch] text-pretty">
+          <ReportSection n={1} title={ms ? "Ringkasan" : "Summary"}>
+            <p>{letter.body}</p>
+          </ReportSection>
+          <ReportSection n={2} title={ms ? "Penemuan" : "Findings"}>
+            <ol className="space-y-3">
+              {(letter.findings ?? []).map((f: { text: string; source: string }, i: number) => (
+                <li key={i} className="grid grid-cols-[1.25rem_1fr]">
+                  <span className="tnum">{i + 1}.</span>
+                  <span>
+                    {f.text}
+                    <span className="mt-0.5 block text-[12.5px] italic text-muted">
+                      {ms ? "Sumber" : "Source"}: {f.source}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </ReportSection>
+          {letter.journey?.length > 0 && (
+            <ReportSection n={3} title={ms ? "Perjalanan pelajar" : "The student's journey"}>
+              <dl className="grid grid-cols-[minmax(0,11rem)_1fr] gap-x-4 gap-y-1.5 text-[14px]">
+                {letter.journey.map(({ label: k, value: v }: { label: string; value: string }) => (
+                  <div key={k} className="contents">
+                    <dt className="text-muted">{k}</dt>
+                    <dd className={`tnum ${/lateness|kelewatan/i.test(k) ? "font-semibold text-stop" : ""}`}>{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </ReportSection>
+          )}
+          <ReportSection n={letter.journey?.length ? 4 : 3} title={ms ? "Kesimpulan" : "Conclusion"}>
+            <p>{letter.conclusion}</p>
+          </ReportSection>
         </div>
-        <p className="mt-5">{letter.lang === "ms" ? "Sekian, terima kasih." : "Thank you for your attention."}</p>
-        <p className="mt-4">{letter.lang === "ms" ? "Yang benar," : "Yours faithfully,"}</p>
-        <div className="mt-8 w-44 border-t border-muted pt-1.5 font-semibold">{letter.studentName}</div>
+        <p className="mt-6 border-t border-line pt-3 text-[12px] text-muted">{ms ? "Disediakan secara automatik oleh Sampai daripada rekod yang dinyatakan. Imbas kod QR dalam PDF untuk mengesahkan." : "Prepared automatically by Sampai from the records cited. Scan the QR code on the PDF to verify."}</p>
       </article>
       <div className="mt-5 grid gap-2.5 sm:grid-cols-[1fr_auto_auto]">
         <ButtonLink href={`${API_URL}/letter/${letter.id}/pdf`} size="lg" icon={<Download size={18} />}>
@@ -146,8 +203,8 @@ export default function Letter() {
     <div className="grid h-full min-h-[420px] place-items-center rounded-2xl border border-dashed border-line-strong p-8 text-center">
       <div>
         <FileText size={28} className="mx-auto text-faint" />
-        <p className="mt-3 font-semibold">Your notice appears here</p>
-        <p className="mx-auto mt-1 max-w-[36ch] text-[13px] text-muted">Fill in your details and press Generate notice. It states the facts and requests the lateness be recorded as beyond your control.</p>
+        <p className="mt-3 font-semibold">Your report appears here</p>
+        <p className="mx-auto mt-1 max-w-[36ch] text-[13px] text-muted">Fill in your details and press Generate report. It lists each cause with its source, your departure and arrival times, and how late you were.</p>
       </div>
     </div>
   );
@@ -160,8 +217,8 @@ export default function Letter() {
 
       <div className="lg:mt-6 lg:grid lg:grid-cols-[minmax(0,420px)_1fr] lg:gap-12">
         <div>
-          <h1 className="mt-4 text-[26px] font-bold tracking-[-0.02em] lg:mt-0 lg:text-[32px]">Delay notice</h1>
-          <p className="mt-1.5 text-[15px] text-muted">An official notice for your lecturer, built only from the incident record. They can scan the QR code to verify it.</p>
+          <h1 className="mt-4 text-[26px] font-bold tracking-[-0.02em] lg:mt-0 lg:text-[32px]">Incident report</h1>
+          <p className="mt-1.5 text-[15px] text-muted">An incident report for your lecturer: what happened, according to which source, and how it made you late. Built only from records; they can scan the QR code to verify it.</p>
 
           {inc && (
             <div className="mt-6 rounded-2xl border border-line bg-surface p-4">
@@ -177,6 +234,15 @@ export default function Letter() {
             </div>
           )}
           {inc === null && <p className="mt-6 text-sm text-stop">This incident doesn't exist any more. Go back and pick another alert.</p>}
+          {self && (
+            <div className="mt-6 rounded-2xl border border-line bg-surface p-4 text-[13.5px]">
+              <div className="font-semibold">No alert needed</div>
+              <p className="mt-1 text-muted">
+                Sampai checks the last 3 hours for stalled trains, stuck buses and MET Malaysia warnings, and builds the report around what it finds. If nothing was recorded, the report says so honestly and records your journey.
+                {qs.get("class") ? ` Class: ${qs.get("class")}${qs.get("start") ? ` at ${qs.get("start")}` : ""}.` : ""}
+              </p>
+            </div>
+          )}
 
           {(desktop || !letter) && <div className="mt-6">{form}</div>}
         </div>

@@ -33,7 +33,7 @@ export default function Onboard() {
       simulated: true,
       updatedAt: Date.now(),
     });
-    nav("/");
+    nav("/app");
   }
 
   return (
@@ -81,7 +81,7 @@ export default function Onboard() {
           </ul>
         ) : (
           <div className="mt-6">
-            <ProfileForm uid={uid} onSaved={() => nav("/")} />
+            <ProfileForm uid={uid} onSaved={() => nav("/app")} />
           </div>
         )}
       </div>

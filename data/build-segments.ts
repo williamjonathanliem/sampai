@@ -153,6 +153,54 @@ async function buildBus() {
 
   fs.writeFileSync(path.join(OUT, "bus_stops.json"), JSON.stringify(busStops));
   fs.writeFileSync(path.join(OUT, "bus_routes.json"), JSON.stringify(busRoutes));
+
+  // ---- bus lines: ordered stops with minute offsets, road shape and frequency timetable ----
+  // One pattern per shape (the stop order a bus actually follows). Used for bus route options.
+  const shapes = table(zip, "shapes.txt");
+  const freqs = table(zip, "frequencies.txt");
+  const calendar = table(zip, "calendar.txt");
+  const stopById = new Map(stops.map((x) => [x.stop_id, x]));
+  const toSec = (t: string) => {
+    const [h, m, sec] = t.split(":").map(Number);
+    return h * 3600 + m * 60 + (sec || 0);
+  };
+  const days = Object.fromEntries(calendar.map((c) => [c.service_id, ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map((d, i) => (c[d] === "1" ? i + 1 : 0)).filter(Boolean)]));
+  const shapePts = new Map<string, [number, number][]>();
+  for (const p of [...shapes].sort((x, y) => +x.shape_pt_sequence - +y.shape_pt_sequence)) {
+    if (!shapePts.has(p.shape_id)) shapePts.set(p.shape_id, []);
+    shapePts.get(p.shape_id)!.push([+(+p.shape_pt_lon).toFixed(6), +(+p.shape_pt_lat).toFixed(6)]);
+  }
+  const timesByTrip = new Map<string, Row[]>();
+  for (const st of stopTimes) {
+    if (!timesByTrip.has(st.trip_id)) timesByTrip.set(st.trip_id, []);
+    timesByTrip.get(st.trip_id)!.push(st);
+  }
+  const busLines: any[] = [];
+  for (const r of routes.filter((x) => nearRouteIds.has(x.route_id))) {
+    const rTrips = trips.filter((t) => t.route_id === r.route_id);
+    for (const shapeId of [...new Set(rTrips.map((t) => t.shape_id))]) {
+      const sTrips = rTrips.filter((t) => t.shape_id === shapeId);
+      const rep = sTrips.find((t) => timesByTrip.has(t.trip_id));
+      if (!rep) continue;
+      const seq = timesByTrip.get(rep.trip_id)!.sort((x, y) => +x.stop_sequence - +y.stop_sequence);
+      const t0 = toSec(seq[0].departure_time || seq[0].arrival_time);
+      const lineStops = seq
+        .map((st) => {
+          const s0 = stopById.get(st.stop_id);
+          return s0 ? { stopId: st.stop_id, name: titleCase(s0.stop_name).replace(/^(Kl|Sl|Bp)\d+\s+/i, ""), lat: +s0.stop_lat, lon: +s0.stop_lon, offsetMin: Math.round((toSec(st.arrival_time) - t0) / 60) } : null;
+        })
+        .filter(Boolean);
+      // frequency windows per service (weekday/weekend): first departure, last departure, headway
+      const windows = sTrips.flatMap((t) =>
+        freqs.filter((f) => f.trip_id === t.trip_id).map((f) => ({ days: days[t.service_id] ?? [], start: Math.round(toSec(f.start_time) / 60), end: Math.round(toSec(f.end_time) / 60), headwayMin: Math.round(+f.headway_secs / 60) })),
+      );
+      const shape = shapePts.get(shapeId) ?? [];
+      const simplified = shape.length > 2 ? (turf.simplify(turf.lineString(shape), { tolerance: 0.00004 }).geometry.coordinates as [number, number][]) : shape;
+      busLines.push({ routeId: r.route_id, shortName: r.route_short_name || r.route_id, name: r.route_long_name, color: r.route_color ? `#${r.route_color}` : "#2e8a5c", shapeId, stops: lineStops, windows, shape: simplified.map(([x, y]) => [+x.toFixed(5), +y.toFixed(5)]) });
+    }
+  }
+  fs.writeFileSync(path.join(OUT, "bus_lines.json"), JSON.stringify(busLines));
+  console.log(`bus lines: ${busLines.length} patterns, ${Math.round(JSON.stringify(busLines).length / 1024)} KB`);
   console.log(`bus: ${busRoutes.length} routes and ${busStops.length} stops within ${BUS_RADIUS_KM} km of APU`);
 }
 

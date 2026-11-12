@@ -42,3 +42,21 @@ export function ensureAuth(): Promise<User> {
   }
   return ready;
 }
+
+/**
+ * Start over: forget this device's profile and anonymous sign-in, so the next visit is a brand-new student.
+ * Deletes the profile doc (alerts stay server-side but belong to the old anonymous id), signs out, clears local prefs.
+ */
+export async function resetSession() {
+  const { signOut } = await import("firebase/auth");
+  const { doc, deleteDoc } = await import("firebase/firestore");
+  const u = auth.currentUser;
+  if (u) await deleteDoc(doc(db, "users", u.uid)).catch(() => null);
+  await signOut(auth).catch(() => null);
+  ready = null;
+  try {
+    for (const k of Object.keys(localStorage)) if (k.startsWith("sampai.")) localStorage.removeItem(k);
+  } catch {
+    /* private mode */
+  }
+}

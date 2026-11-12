@@ -1,7 +1,7 @@
 /**
  * Builds reroute options for one student and one incident.
  * Sources: Google Routes API (if ROUTES_API_KEY), the fallback table in data/alternatives.json,
- * the APU shuttle schedule (APSpace) and the Grab fare formula in data/config.json.
+ * the APU shuttle schedule (APSpace) and the taxi fare formula in data/config.json.
  */
 import alternatives from "../../data/alternatives.json";
 import config from "../../data/config.json";
@@ -129,7 +129,7 @@ export async function buildOptions(incident: Incident, user: UserDoc, ctx: TripC
   const baseMin = routeMinutes(user);
   const opts: AlertOption[] = [];
 
-  // Where to start the Grab from: the alternative's pickup, else the station before the stall, else home
+  // Where to start the taxi from: the alternative's pickup, else the station before the stall, else home
   const stallStation = stationById.get(incident.fromStop ?? "") ?? null;
 
   for (const alt of table as any[]) {

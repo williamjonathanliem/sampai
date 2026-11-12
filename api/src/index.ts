@@ -98,11 +98,11 @@ app.get("/incident/:id", async (req, res) => {
   res.json(inc);
 });
 
-// ---------------- delay letter ----------------
+// ---------------- incident report (with or without an alert) ----------------
 app.post("/letter", async (req, res) => {
   try {
     const body = req.body as LetterRequest;
-    if (!body?.incidentId || !body?.studentName) return res.status(400).json({ error: "incidentId and studentName are required" });
+    if (!body?.studentName) return res.status(400).json({ error: "studentName is required" });
     const letter = await createLetter(body);
     res.json(letter);
   } catch (e: any) {
@@ -118,7 +118,7 @@ app.get("/letter/:id/pdf", async (req, res) => {
   if (!l) return res.status(404).json({ error: "not found" });
   const pdf = await renderPdf(l);
   res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", `${req.query.inline ? "inline" : "attachment"}; filename="sampai-letter-${l.incidentId}.pdf"`);
+  res.setHeader("Content-Disposition", `${req.query.inline ? "inline" : "attachment"}; filename="sampai-report-${l.incidentId}.pdf"`);
   res.send(pdf);
 });
 

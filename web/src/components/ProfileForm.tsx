@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Polyline, Tooltip, useMapEvents, useMap } from "react-leaflet";
 import { doc, setDoc } from "firebase/firestore";
-import { CircleCheck, LocateFixed, MapPin, Loader2 } from "lucide-react";
+import { CircleCheck, LocateFixed, MapPin, Loader2, RefreshCw, X } from "lucide-react";
 import { db } from "../lib/firebase";
 import AddressSearch from "./AddressSearch";
 import RouteOptionsList, { legsKey, type RouteOption } from "./RouteOptions";
 import { api } from "../lib/api";
+import { loadRecent, rememberProfile } from "../lib/recent";
 import { lines, routeFromLegs, APU } from "../../../shared/network";
 import type { UserDoc } from "../../../shared/types";
 import { Button, Eyebrow, Field, Input, Segmented, Select } from "./ui";
-import { C } from "./MapView";
+import { C, TripPath, FitTo, boundsForPieces } from "./MapView";
 
 type LatLon = { lat: number; lon: number };
 
@@ -23,13 +24,20 @@ function Picker({ home, onPick }: { home: LatLon | null; onPick: (p: LatLon) => 
 }
 
 export default function ProfileForm({ uid, initial, onSaved, wide = false }: { uid: string | null; initial?: UserDoc | null; onSaved: () => void; wide?: boolean }) {
-  const [name, setName] = useState(initial && !initial.simulated ? initial.displayName ?? "" : "");
+  // values used before on this device: prefill an empty profile, offer the rest as one-tap chips
+  const [recent] = useState(loadRecent);
+  const own = initial && !initial.simulated ? initial : null;
+  const [name, setName] = useState(own ? own.displayName ?? "" : recent.name ?? "");
+  // profiles saved before "recent" existed: remember them now, so Start over keeps them
+  useEffect(() => {
+    if (own) rememberProfile({ name: own.displayName ?? undefined, lang: own.lang, intake: own.intake, group: own.group, home: own.homeLocation ?? null });
+  }, [own?.intake, own?.homeLocation?.lat]);
   // a demo student's language shouldn't carry over into your own profile
-  const [lang, setLang] = useState<"en" | "ms">(initial && !initial.simulated ? initial.lang : "en");
-  const [intake, setIntake] = useState(initial?.intake ?? "");
+  const [lang, setLang] = useState<"en" | "ms">(own ? own.lang : recent.lang ?? "en");
+  const [intake, setIntake] = useState(own?.intake ?? (initial ? initial.intake ?? "" : recent.intakes[0]?.intake ?? ""));
   const [intakes, setIntakes] = useState<string[]>([]);
   const [intakeInfo, setIntakeInfo] = useState<any>(null);
-  const [group, setGroup] = useState<string>(initial && !initial.simulated ? initial.group ?? "" : "");
+  const [group, setGroup] = useState<string>(own ? own.group ?? "" : !initial ? recent.intakes[0]?.group ?? "" : "");
   const [checking, setChecking] = useState(false);
   const [home, setHome] = useState<LatLon | null>(initial?.homeLocation && !initial.simulated ? { lat: initial.homeLocation.lat, lon: initial.homeLocation.lon } : null);
   const [homeLabel, setHomeLabel] = useState(initial && !initial.simulated ? initial.homeLocation?.label ?? "" : "");
@@ -40,6 +48,7 @@ export default function ProfileForm({ uid, initial, onSaved, wide = false }: { u
   const [optErr, setOptErr] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [board, setBoard] = useState("");
+  const [retry, setRetry] = useState(0);
   const savedKey = initial && !initial.simulated && initial.route ? legsKey(initial.route.legs) : null;
   const [locating, setLocating] = useState(false);
   const [locErr, setLocErr] = useState("");
@@ -107,7 +116,24 @@ export default function ProfileForm({ uid, initial, onSaved, wide = false }: { u
       alive = false;
       clearTimeout(t);
     };
-  }, [home?.lat, home?.lon, intakeInfo?.intake, intakeInfo?.needsGroup, group, board]);
+  }, [home?.lat, home?.lon, intakeInfo?.intake, intakeInfo?.needsGroup, group, board, retry]);
+
+  /** A remembered home; the api snaps it to a corrected pin if the place has one (data/local_rules.json). */
+  function useRecentHome(h: { label: string; lat: number; lon: number }) {
+    placeHome({ lat: h.lat, lon: h.lon }, h.label);
+    api<{ label: string; lat: number; lon: number } | null>(`/geo/reverse?lat=${h.lat}&lon=${h.lon}`)
+      .then((r) => r && r.label === h.label && (r.lat !== h.lat || r.lon !== h.lon) && setHome({ lat: r.lat, lon: r.lon }))
+      .catch(() => null);
+  }
+
+  function clearHome() {
+    setHome(null);
+    setHomeLabel("");
+    setLabelTouched(false);
+    setSelected(null);
+    setBoard("");
+    setLocErr("");
+  }
 
   const chosen = options?.find((o) => o.id === selected) ?? null;
 
@@ -148,12 +174,14 @@ export default function ProfileForm({ uid, initial, onSaved, wide = false }: { u
       intake: intake.trim().length >= 6 ? intake.trim().toUpperCase() : null,
       group: group || null,
       homeLocation: { lat: home.lat, lon: home.lon, label: homeLabel.trim() || "Home" },
-      route: routeFromLegs(legs),
+      route: { ...routeFromLegs(legs), pathJson: JSON.stringify(chosen.path), title: chosen.title },
       classes: [],
       simulated: false,
+      ...(own?.autoShare ? { autoShare: true } : {}),
     };
     try {
       await setDoc(doc(db, "users", uid), { ...u, fcmTokens: initial?.fcmTokens ?? [], updatedAt: Date.now() });
+      rememberProfile({ name: u.displayName, lang: u.lang, intake: u.intake, group: u.group, home: u.homeLocation });
       onSaved();
     } catch (e: any) {
       setSaveErr(`Couldn't save: ${e.message}. Check the app is connected and try again.`);
@@ -192,6 +220,19 @@ export default function ProfileForm({ uid, initial, onSaved, wide = false }: { u
           }
         >
           <Input value={intake} onChange={(e) => setIntake(e.target.value.toUpperCase().replace(/\s/g, ""))} list="intakes" placeholder="APD2F2609SE" className="uppercase tracking-wide" autoCapitalize="characters" spellCheck={false} />
+          {recent.intakes.some((r) => r.intake !== intake.toUpperCase()) && (
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <span className="text-xs text-muted">Recent:</span>
+              {recent.intakes
+                .filter((r) => r.intake !== intake.toUpperCase())
+                .map((r) => (
+                  <button key={r.intake} type="button" onClick={() => (setIntake(r.intake), setGroup(r.group ?? ""))} className="press h-7 rounded-full bg-sunken px-2.5 text-xs font-semibold tracking-wide hover:bg-line">
+                    {r.intake}
+                    {r.group ? ` ${r.group}` : ""}
+                  </button>
+                ))}
+            </div>
+          )}
           <datalist id="intakes">
             {intakes.map((i) => (
               <option key={i} value={i} />
@@ -226,21 +267,43 @@ export default function ProfileForm({ uid, initial, onSaved, wide = false }: { u
 
       <div className="min-w-0 space-y-8">
       <section className="space-y-4">
-        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="min-w-0 flex-1 basis-56">
             <Eyebrow>Home</Eyebrow>
             <p className="mt-1 text-[13px] text-muted">Search for your home, or tap the map. Used only to work out your walk to the station.</p>
           </div>
-          <Button variant="secondary" size="sm" className="shrink-0 whitespace-nowrap" loading={locating} onClick={useMyLocation} icon={<LocateFixed size={15} />}>
-            Use my location
-          </Button>
+          <div className="flex shrink-0 gap-2">
+            {home && (
+              <Button variant="ghost" size="sm" className="whitespace-nowrap" onClick={clearHome} icon={<X size={15} />}>
+                Clear home
+              </Button>
+            )}
+            <Button variant="secondary" size="sm" className="whitespace-nowrap" loading={locating} onClick={useMyLocation} icon={<LocateFixed size={15} />}>
+              Use my location
+            </Button>
+          </div>
         </div>
         <AddressSearch onSelect={(p) => placeHome({ lat: p.lat, lon: p.lon }, p.label)} />
+        {recent.homes.some((h) => !home || Math.abs(h.lat - home.lat) > 1e-4 || Math.abs(h.lon - home.lon) > 1e-4) && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs text-muted">Recent:</span>
+            {recent.homes
+              .filter((h) => !home || Math.abs(h.lat - home.lat) > 1e-4 || Math.abs(h.lon - home.lon) > 1e-4)
+              .map((h) => (
+                <button key={`${h.lat},${h.lon}`} type="button" onClick={() => useRecentHome(h)} className="press flex h-7 items-center gap-1 rounded-full bg-sunken px-2.5 text-xs font-semibold hover:bg-line">
+                  <MapPin size={12} className="text-brand" />
+                  {h.label}
+                </button>
+              ))}
+          </div>
+        )}
         <div className="relative h-64 overflow-hidden rounded-2xl border border-line">
           <MapContainer center={home ? [home.lat, home.lon] : [3.075, 101.67]} zoom={home ? 14 : 12} zoomControl={false} className="h-full w-full">
             <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}" attribution="Esri, HERE, Garmin, OSM" maxZoom={16} />
             <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}" maxZoom={16} opacity={0.7} />
             <Picker home={home} onPick={(p) => placeHome(p)} />
+            {chosen && <TripPath pieces={chosen.path} />}
+            {chosen && <FitTo bounds={boundsForPieces(chosen.path, home ? [home] : [])} />}
             {lines.map((l) => (
               <Polyline key={l.lineId} positions={l.geometry.coordinates.map(([x, y]) => [y, x] as [number, number])} pathOptions={{ color: l.color, weight: 3, opacity: 0.7 }} />
             ))}
@@ -279,9 +342,25 @@ export default function ProfileForm({ uid, initial, onSaved, wide = false }: { u
                   : "Timed for leaving now. Add your intake to time it for your next class."}
             </p>
           </div>
-          {optLoading && <Loader2 size={18} className="mb-0.5 shrink-0 animate-spin text-muted" />}
+          {optLoading ? (
+            <Loader2 size={18} className="mb-0.5 shrink-0 animate-spin text-muted" />
+          ) : (
+            home && (
+              <Button variant="ghost" size="sm" className="shrink-0" onClick={() => setRetry((n) => n + 1)} icon={<RefreshCw size={15} />}>
+                Refresh
+              </Button>
+            )
+          )}
         </div>
-        {optErr && <p className="text-[13px] text-stop">{optErr}</p>}
+        {optErr && (
+          <p className="flex flex-wrap items-center gap-2 text-[13px] text-stop">
+            {optErr}
+            <button onClick={() => setRetry((n) => n + 1)} className="font-semibold text-brand">
+              Try again
+            </button>
+          </p>
+        )}
+        {options && selected && <p className="text-xs text-muted">Tap the chosen route again to unselect it.</p>}
         {home && !options && optLoading && (
           <div className="space-y-2.5" aria-busy="true">
             {[0, 1, 2].map((i) => (
@@ -289,7 +368,7 @@ export default function ProfileForm({ uid, initial, onSaved, wide = false }: { u
             ))}
           </div>
         )}
-        {options && <RouteOptionsList options={options} selected={selected} onSelect={setSelected} classStartTs={forClass ? Date.parse(`${forClass.date}T${forClass.start}:00+08:00`) : null} />}
+        {options && <RouteOptionsList options={options} selected={selected} onSelect={(id) => setSelected((cur) => (cur === id ? null : id))} />}
         {options && (
           <details className="text-[13px]">
             <summary className="cursor-pointer select-none font-semibold text-brand">Board at a different station</summary>
