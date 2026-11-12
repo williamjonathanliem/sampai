@@ -2,6 +2,7 @@ import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Check, Copy, DownloadSimple, X } from "@phosphor-icons/react";
 import { Logo, LogoMark } from "../components/Logo";
+import { Nav } from "../components/SiteNav";
 
 const colors = [
   { name: "Senja", role: "Primary", meaning: "Dusk violet, the colour of the evening commute. Buttons, selection, focus, the brand moments.", hex: "#5E3EB6", oklch: "oklch(0.47 0.18 290)", fg: "#FDFDFF" },
@@ -97,14 +98,15 @@ export default function Brand() {
   return (
     <div className="lp min-h-full bg-bg text-fg">
       <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-6 lg:px-8">
-        <header className="flex items-center justify-between gap-4 py-6">
+        <Nav />
+        <header className="flex items-center justify-between gap-4 py-6 lg:hidden">
           <Link to="/welcome" className="lp-press inline-flex min-h-11 items-center gap-2 rounded-xl px-3 py-2 button-sm text-muted hover:bg-sunken hover:text-fg">
             <ArrowLeft size={16} /> Back to Sampai
           </Link>
           <span className="caption-3 uppercase tracking-wider text-muted">Brand kit · v1 · Nov 2026</span>
         </header>
 
-        <main>
+        <main className="lg:pt-24">
           <section className="grid items-center gap-12 py-16 lg:grid-cols-2">
             <div>
               <h1 className="heading-3 sm:heading-2 lg:heading-1">
