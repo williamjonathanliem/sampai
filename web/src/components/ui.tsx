@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode, AnchorHTMLAttributes, InputHTMLAttributes, SelectHTMLAttributes } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { LogoMark } from "./Logo";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "go";
 type Size = "md" | "sm" | "lg";
@@ -94,10 +95,13 @@ export function Field({ label, hint, children }: { label: string; hint?: ReactNo
 export const Input = (p: InputHTMLAttributes<HTMLInputElement>) => <input {...p} className={`${control} ${p.className ?? ""}`} />;
 export const Select = (p: SelectHTMLAttributes<HTMLSelectElement>) => <select {...p} className={`${control} appearance-none bg-[url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%236b6880' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")] bg-[right_12px_center] bg-no-repeat pr-9 ${p.className ?? ""}`} />;
 
-export function Wordmark({ className = "" }: { className?: string }) {
+export function Wordmark({ className = "", animated = false }: { className?: string; animated?: boolean }) {
   return (
-    <Link to="/" className={`inline-flex items-baseline text-[20px] font-extrabold tracking-[-0.02em] text-fg ${className}`}>
-      Sampai<span className="text-brand">.</span>
+    <Link to="/" className={`inline-flex items-center gap-2 text-[20px] font-bold tracking-[-0.03em] text-fg ${className}`}>
+      <LogoMark size={24} animated={animated} />
+      <span>
+        Sampai<span className="text-brand">.</span>
+      </span>
     </Link>
   );
 }
