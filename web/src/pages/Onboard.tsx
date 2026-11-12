@@ -9,12 +9,8 @@ import { routeFromLegs } from "../../../shared/network";
 import type { RouteLeg } from "../../../shared/types";
 import { Badge, Segmented, SimTag, Wordmark } from "../components/ui";
 import ProfileForm from "../components/ProfileForm";
-
-const steps: [string, string][] = [
-  ["Riders are the sensors", "Rapid KL shares live bus GPS but not train positions. When several phones stop between two stations, the train has stalled."],
-  ["You hear first", "If it's on your route and your class is soon, your phone buzzes with the fastest way to still make it."],
-  ["Proof for your lecturer", "One tap produces an official disruption notice from the incident record, with a QR code they can check."],
-];
+import { LiveNow } from "../components/LiveNow";
+import { Nav } from "../components/SiteNav";
 
 export default function Onboard() {
   const uid = useUid();
@@ -41,24 +37,15 @@ export default function Onboard() {
   }
 
   return (
-    <div className="mx-auto max-w-md px-5 pb-16 pt-[max(env(safe-area-inset-top),20px)] lg:grid lg:max-w-6xl lg:grid-cols-[1fr_minmax(0,480px)] lg:items-start lg:gap-20 lg:px-10 lg:pt-16">
-      <div className="lg:sticky lg:top-16">
-        <div className="intro-drop">
+    <div className="mx-auto max-w-md px-5 pb-16 pt-[max(env(safe-area-inset-top),20px)] lg:grid lg:max-w-6xl lg:grid-cols-[1fr_minmax(0,480px)] lg:items-start lg:gap-20 lg:px-10 lg:pt-32">
+      <Nav />
+      <div className="lg:sticky lg:top-28">
+        <div className="intro-drop lg:hidden">
           <Wordmark animated />
         </div>
-        <h1 style={{ "--d": "120ms" } as CSSProperties} className="intro mt-8 text-[28px] font-bold leading-[1.15] tracking-[-0.02em] lg:mt-16 lg:max-w-[16ch] lg:text-[44px] lg:leading-[1.08]">Get to class, or get proof why you didn't.</h1>
-        <p style={{ "--d": "220ms" } as CSSProperties} className="intro mt-3 max-w-[52ch] text-[15px] leading-relaxed text-muted lg:mt-5 lg:text-[17px]">Sampai watches your train with other riders' phones and tells you what to do the moment it stops.</p>
-        <ol style={{ "--d": "320ms" } as CSSProperties} className="intro mt-10 hidden max-w-[52ch] space-y-5 lg:block">
-          {steps.map(([t, d], i) => (
-            <li key={t} className="flex gap-4">
-              <span className="tnum grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-soft text-[13px] font-bold text-brand">{i + 1}</span>
-              <div>
-                <div className="font-semibold">{t}</div>
-                <p className="mt-0.5 text-[14px] leading-relaxed text-muted">{d}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
+        <h1 style={{ "--d": "120ms" } as CSSProperties} className="intro mt-8 text-[28px] font-bold leading-[1.15] tracking-[-0.02em] lg:mt-8 lg:max-w-[16ch] lg:text-[44px] lg:leading-[1.08]">Get to class, or get proof why you didn't.</h1>
+        <p style={{ "--d": "220ms" } as CSSProperties} className="intro mt-3 max-w-[52ch] text-[15px] leading-relaxed text-muted lg:mt-5 lg:text-[17px]">Pick a demo student or set up your own commute. This is what Sampai can see right now.</p>
+        <LiveNow style={{ "--d": "320ms" } as CSSProperties} className="intro mt-10 hidden max-w-[52ch] lg:block" />
       </div>
 
       <div style={{ "--d": "260ms" } as CSSProperties} className="intro-pop mt-8 lg:mt-0 lg:rounded-3xl lg:border lg:border-line lg:bg-surface lg:p-8">

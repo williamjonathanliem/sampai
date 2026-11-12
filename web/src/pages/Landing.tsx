@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import QRCode from "qrcode";
 import {
@@ -18,17 +18,11 @@ import {
   ShieldCheck,
 } from "@phosphor-icons/react";
 import { Logo } from "../components/Logo";
+import { Anchor, Nav, NAV_IDS, goTo } from "../components/SiteNav";
+import { HeroMap } from "../components/HeroMap";
 import { useUid, useUserDoc } from "../lib/hooks";
 
 /* ------------------------------------------------------------------ data */
-
-const NAV = [
-  { id: "problem", label: "The gap" },
-  { id: "benefits", label: "What you get" },
-  { id: "how", label: "How it works" },
-  { id: "proof", label: "Delay notice" },
-  { id: "faq", label: "FAQ" },
-];
 
 const evidence = [
   { src: "Malay Mail", date: "Feb 2026", text: "Kelana Jaya LRT suffers serial breakdowns", href: "https://www.malaymail.com/news/malaysia/2026/02/27/mounting-frustration-as-kelana-jaya-lrt-suffers-serial-breakdowns-just-days-after-double-disruption/210557" },
@@ -52,37 +46,7 @@ const faqs: { q: string; a: string }[] = [
   { q: "What is simulated in the demo?", a: "Riders and stalls started from the simulator are labelled SIMULATED on screen and in the data. Timetables, shuttle times, bus GPS and weather are live." },
 ];
 
-const NAV_IDS = NAV.map((n) => n.id);
-
 /* --------------------------------------------------------------- hooks */
-
-const prefersReduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-/** Smooth scroll to a section (or the top) without writing a #hash into the URL. */
-function goTo(id: string | null) {
-  const behavior: ScrollBehavior = prefersReduced() ? "auto" : "smooth";
-  if (!id) return window.scrollTo({ top: 0, behavior });
-  document.getElementById(id)?.scrollIntoView({ behavior, block: "start" });
-}
-
-/** An in-page link: keeps a real href (new tab, copy link still work) but scrolls smoothly and leaves the URL alone. */
-function Anchor({ to, onGo, children, ...rest }: { to: string; onGo?: () => void } & Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href">) {
-  return (
-    <a
-      {...rest}
-      href={`#${to}`}
-      onClick={(e) => {
-        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-        e.preventDefault();
-        onGo?.();
-        // let a closing menu release the scroll lock first
-        requestAnimationFrame(() => goTo(to));
-      }}
-    >
-      {children}
-    </a>
-  );
-}
 
 /** Sections rise 32px and fade in once, when they enter the viewport. */
 function useReveal(root: React.RefObject<HTMLElement | null>) {
@@ -104,216 +68,7 @@ function useReveal(root: React.RefObject<HTMLElement | null>) {
   }, [root]);
 }
 
-/** Which section is under the nav, so the nav can mark it. */
-function useActiveSection(ids: string[]) {
-  const [active, setActive] = useState<string | null>(null);
-  useEffect(() => {
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          const id = e.target.id;
-          if (e.isIntersecting) setActive(id);
-          // keep the last section lit across gaps (tagline, privacy); clear only when scrolling back up into the hero
-          else if (id === ids[0] && e.boundingClientRect.top > 0) setActive((prev) => (prev === id ? null : prev));
-        }
-      },
-      { rootMargin: "-45% 0px -50% 0px" },
-    );
-    ids.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) io.observe(el);
-    });
-    return () => io.disconnect();
-  }, [ids]);
-  return active;
-}
-
 /* ----------------------------------------------------------- components */
-
-/**
- * The highlight behind the active nav item glides to the next one (FLIP, transform only).
- * It starts from wherever it is drawn right now, so fast scrolling through sections never makes it jump.
- */
-function useNavPill(active: string | null) {
-  const list = useRef<HTMLUListElement>(null);
-  const pill = useRef<HTMLSpanElement>(null);
-
-  const place = (animate: boolean) => {
-    const ul = list.current;
-    const p = pill.current;
-    if (!ul || !p) return;
-    const link = active ? ul.querySelector<HTMLElement>(`[data-nav="${active}"]`) : null;
-    if (!link) {
-      p.style.opacity = "0";
-      return;
-    }
-    const x = link.offsetLeft;
-    const w = link.offsetWidth;
-    const wasVisible = p.style.opacity === "1";
-    const from = p.getBoundingClientRect();
-    const fromX = from.left - ul.getBoundingClientRect().left;
-
-    p.style.transition = "none";
-    p.style.top = `${link.offsetTop}px`;
-    p.style.height = `${link.offsetHeight}px`;
-    p.style.width = `${w}px`;
-    if (animate && wasVisible && !prefersReduced()) {
-      p.style.transform = `translateX(${fromX}px) scaleX(${from.width / w})`;
-      void p.offsetWidth; // commit the start frame
-      p.style.transition = "transform 500ms var(--ease-brand), opacity 300ms var(--ease-brand)";
-    } else if (animate && !prefersReduced()) {
-      p.style.transform = `translateX(${x}px) scale(0.9)`;
-      void p.offsetWidth;
-      p.style.transition = "transform 500ms var(--ease-brand), opacity 300ms var(--ease-brand)";
-    }
-    p.style.transform = `translateX(${x}px)`;
-    p.style.opacity = "1";
-  };
-
-  const latest = useRef(place);
-  latest.current = place;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useLayoutEffect(() => place(true), [active]);
-  // re-measure without animating when the layout shifts (resize, web font swap)
-  useEffect(() => {
-    const snap = () => latest.current(false);
-    window.addEventListener("resize", snap);
-    document.fonts?.ready.then(snap);
-    return () => window.removeEventListener("resize", snap);
-  }, []);
-
-  return { list, pill };
-}
-
-function Nav({ appHref, hasUser }: { appHref: string; hasUser: boolean }) {
-  const [open, setOpen] = useState(false);
-  const active = useActiveSection(NAV_IDS);
-  const { list, pill } = useNavPill(active);
-
-  useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  const cta = hasUser ? "Open the app" : "Try the live demo";
-
-  return (
-    <>
-      <div className="intro-drop fixed inset-x-0 top-4 z-50 flex justify-center px-4">
-        <nav aria-label="Main" className="flex w-full max-w-[880px] items-center gap-2 rounded-2xl bg-surface/85 p-2 pl-4 ring-1 ring-line backdrop-blur-md">
-          <button type="button" onClick={() => goTo(null)} aria-label="Sampai, back to top" className="mr-auto rounded-lg">
-            <Logo size={28} animated />
-          </button>
-          <ul ref={list} className="relative hidden items-center gap-1 md:flex">
-            <span ref={pill} className="nav-pill" aria-hidden />
-            {NAV.map((n) => (
-              <li key={n.id}>
-                <Anchor
-                  to={n.id}
-                  data-nav={n.id}
-                  aria-current={active === n.id ? "true" : undefined}
-                  className={`lp-press relative block rounded-lg px-3 py-2 button-sm ${active === n.id ? "text-fg" : "text-muted hover:text-fg"}`}
-                >
-                  {n.label}
-                </Anchor>
-              </li>
-            ))}
-          </ul>
-          <Link to={appHref} className="lp-press hidden rounded-xl bg-brand px-3 py-2 button-sm text-surface hover:bg-brand-hover sm:block">
-            {cta}
-          </Link>
-          <button
-            type="button"
-            aria-expanded={open}
-            aria-controls="mobile-menu"
-            aria-label={open ? "Close menu" : "Open menu"}
-            onClick={() => setOpen((o) => !o)}
-            className="lp-press relative z-[60] flex h-11 w-11 items-center justify-center rounded-xl text-fg hover:bg-sunken md:hidden"
-          >
-            <span className="flex w-4 flex-col gap-1.5" aria-hidden>
-              <span className="menu-line menu-line-a block h-0.5 w-4 rounded-full bg-current" />
-              <span className="menu-line menu-line-b block h-0.5 w-4 rounded-full bg-current" />
-            </span>
-          </button>
-        </nav>
-      </div>
-
-      <div id="mobile-menu" className={`menu-panel fixed inset-0 z-40 bg-surface/95 backdrop-blur-xl md:hidden ${open ? "open" : ""}`} aria-hidden={!open}>
-        <ul className="flex h-full flex-col justify-center gap-2 px-6">
-          {NAV.map((n, i) => (
-            <li key={n.id} className="menu-link" style={{ transitionDelay: open ? `${i * 60}ms` : "0ms" }}>
-              <Anchor to={n.id} tabIndex={open ? 0 : -1} onGo={() => setOpen(false)} className={`block rounded-lg py-2 heading-4 ${active === n.id ? "text-brand" : "text-fg"}`}>
-                {n.label}
-              </Anchor>
-            </li>
-          ))}
-          <li className="menu-link mt-6" style={{ transitionDelay: open ? `${NAV.length * 60}ms` : "0ms" }}>
-            <Link to={appHref} tabIndex={open ? 0 : -1} className="lp-press inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand px-3 py-2 button-md text-surface">
-              {cta} <ArrowRight size={18} />
-            </Link>
-          </li>
-        </ul>
-      </div>
-    </>
-  );
-}
-
-/** Animated route: riders move along the Sri Petaling line, one stretch stalls, the phone alert lands. */
-function StallScene() {
-  return (
-    <div className="relative mx-auto w-full max-w-[560px] sm:pb-24" aria-hidden>
-      <div className="rounded-2xl bg-surface/10 p-4 ring-1 ring-surface/20 sm:p-6">
-        <div className="flex items-center justify-between gap-3 caption-3 text-surface">
-          <span className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-warn-fill" />
-            Sri Petaling line · live
-          </span>
-          <span className="caption-4 text-surface/75">3 riders on board</span>
-        </div>
-        <svg viewBox="0 0 560 190" className="mt-4 w-full overflow-visible text-surface">
-          <path d="M470 70 C 505 70, 512 120, 536 140" fill="none" stroke="currentColor" strokeOpacity=".5" strokeWidth="4" strokeDasharray="2 10" strokeLinecap="round" />
-          <line x1="24" y1="70" x2="470" y2="70" stroke="currentColor" strokeOpacity=".95" strokeWidth="14" strokeLinecap="round" />
-          <line x1="250" y1="70" x2="470" y2="70" stroke="var(--color-stop)" strokeWidth="14" strokeLinecap="round" className="scene-stall" />
-          {[
-            { x: 24, name: "Awan Besar", a: "start" },
-            { x: 250, name: "Sri Petaling", a: "middle" },
-            { x: 470, name: "Bukit Jalil", a: "middle" },
-          ].map((st) => (
-            <g key={st.name}>
-              <circle cx={st.x} cy={70} r={14} fill="var(--color-brand)" stroke="currentColor" strokeWidth="6" />
-              <text x={st.x} y={116} textAnchor={st.a as "start" | "middle"} fill="currentColor" fontSize="17" fontWeight="600">
-                {st.name}
-              </text>
-            </g>
-          ))}
-          <g>
-            <rect x="500" y="130" width="60" height="34" rx="8" fill="currentColor" />
-            <text x="530" y="153" textAnchor="middle" fontSize="16" fontWeight="700" fill="var(--color-brand)">
-              APU
-            </text>
-          </g>
-          {[0, 1, 2].map((i) => (
-            <circle key={i} cx={34} cy={70} r={9} className={`scene-rider scene-rider-${i}`} />
-          ))}
-        </svg>
-      </div>
-
-      {/* the alert that lands on the student's phone */}
-      <div className="scene-alert relative mt-4 rounded-2xl bg-surface p-4 text-fg shadow-[0_24px_48px_oklch(0.2_0.12_290/0.35)] sm:absolute sm:bottom-0 sm:right-0 sm:mt-0 sm:w-[320px]">
-        <div className="flex items-center gap-2 caption-4 text-muted">
-          <BellRinging size={14} weight="bold" className="text-stop" /> Sampai · now
-        </div>
-        <div className="mt-1 body-4 text-stop">Sri Petaling line stalled before Bukit Jalil</div>
-        <div className="mt-1 caption-2 text-fg/80">Take bus T580 from Awan Besar, arrive 08:52. You'll still make 09:00.</div>
-      </div>
-    </div>
-  );
-}
 
 /** Large tagline. Words go from muted to full in reading order as the section scrolls up. */
 function TaglineReveal({ lines }: { lines: string[] }) {
@@ -468,7 +223,8 @@ export default function Landing() {
     const hash = window.location.hash.slice(1);
     if (hash) {
       history.replaceState(null, "", window.location.pathname + window.location.search);
-      if (NAV_IDS.includes(hash) || hash === "privacy") requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView({ block: "start" }));
+      // arriving from another page: let the entrance start, then glide down to the section
+      if (NAV_IDS.includes(hash) || hash === "privacy") setTimeout(() => goTo(hash), 350);
     }
     return () => {
       document.title = prev;
@@ -482,7 +238,7 @@ export default function Landing() {
       <a href="#main" className="sr-only z-[70] rounded-lg bg-fg px-3 py-2 button-sm text-surface focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
         Skip to content
       </a>
-      <Nav appHref={appHref} hasUser={!!user} />
+      <Nav />
 
       <main id="main">
         {/* ---------- hero ---------- */}
@@ -507,8 +263,8 @@ export default function Landing() {
                 Watching 179 rail stretches across 8 Klang Valley lines
               </p>
             </div>
-            <div className="intro-pop rounded-3xl bg-brand p-4 sm:p-8" style={{ "--d": "260ms" } as CSSProperties}>
-              <StallScene />
+            <div className="intro-pop" style={{ "--d": "260ms" } as CSSProperties}>
+              <HeroMap />
             </div>
           </div>
         </section>
