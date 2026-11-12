@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { doc, setDoc } from "firebase/firestore";
 import { ChevronRight, Loader2 } from "lucide-react";
@@ -43,10 +43,12 @@ export default function Onboard() {
   return (
     <div className="mx-auto max-w-md px-5 pb-16 pt-[max(env(safe-area-inset-top),20px)] lg:grid lg:max-w-6xl lg:grid-cols-[1fr_minmax(0,480px)] lg:items-start lg:gap-20 lg:px-10 lg:pt-16">
       <div className="lg:sticky lg:top-16">
-        <Wordmark />
-        <h1 className="mt-8 text-[28px] font-bold leading-[1.15] tracking-[-0.02em] lg:mt-16 lg:max-w-[16ch] lg:text-[44px] lg:leading-[1.08]">Get to class, or get proof why you didn't.</h1>
-        <p className="mt-3 max-w-[52ch] text-[15px] leading-relaxed text-muted lg:mt-5 lg:text-[17px]">Sampai watches your train with other riders' phones and tells you what to do the moment it stops.</p>
-        <ol className="mt-10 hidden max-w-[52ch] space-y-5 lg:block">
+        <div className="intro-drop">
+          <Wordmark animated />
+        </div>
+        <h1 style={{ "--d": "120ms" } as CSSProperties} className="intro mt-8 text-[28px] font-bold leading-[1.15] tracking-[-0.02em] lg:mt-16 lg:max-w-[16ch] lg:text-[44px] lg:leading-[1.08]">Get to class, or get proof why you didn't.</h1>
+        <p style={{ "--d": "220ms" } as CSSProperties} className="intro mt-3 max-w-[52ch] text-[15px] leading-relaxed text-muted lg:mt-5 lg:text-[17px]">Sampai watches your train with other riders' phones and tells you what to do the moment it stops.</p>
+        <ol style={{ "--d": "320ms" } as CSSProperties} className="intro mt-10 hidden max-w-[52ch] space-y-5 lg:block">
           {steps.map(([t, d], i) => (
             <li key={t} className="flex gap-4">
               <span className="tnum grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-soft text-[13px] font-bold text-brand">{i + 1}</span>
@@ -59,7 +61,7 @@ export default function Onboard() {
         </ol>
       </div>
 
-      <div className="mt-8 lg:mt-0 lg:rounded-3xl lg:border lg:border-line lg:bg-surface lg:p-8">
+      <div style={{ "--d": "260ms" } as CSSProperties} className="intro-pop mt-8 lg:mt-0 lg:rounded-3xl lg:border lg:border-line lg:bg-surface lg:p-8">
         <Segmented
           value={mode}
           onChange={setMode}
@@ -72,8 +74,8 @@ export default function Onboard() {
         {mode === "pick" && <p className="mt-4 text-[13px] text-muted">Picking a demo student replaces the profile on this device.</p>}
         {mode === "pick" ? (
           <ul className="mt-3 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface lg:-mx-8 lg:rounded-none lg:border-x-0 lg:bg-transparent">
-            {config.demoProfiles.map((p) => (
-              <li key={p.id}>
+            {config.demoProfiles.map((p, i) => (
+              <li key={p.id} className="intro" style={{ "--d": `${420 + i * 60}ms` } as CSSProperties}>
                 <button disabled={!uid || !!saving} onClick={() => pickProfile(p)} className="flex w-full items-center gap-3.5 px-4 py-4 text-left transition-colors hover:bg-sunken/60 disabled:opacity-60 lg:px-8">
                   <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-soft text-[17px] font-bold text-brand">{p.displayName[0]}</span>
                   <span className="min-w-0 flex-1">
