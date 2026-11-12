@@ -1,50 +1,86 @@
-# Sampai
+<p align="center">
+  <img src="web/public/og-image.png" alt="Sampai: Get to class, or get proof why you didn't." width="720" />
+</p>
 
-**Your train stopped. You'll still get to class.**
+<h1 align="center">Sampai</h1>
 
-Sampai is a commute app for APU students in Kuala Lumpur. Riders' phones become live sensors for the LRT, because Malaysia publishes live GPS for every bus but not for a single train. When several riders stop between two stations, Sampai raises an incident, buzzes every student whose next class it affects with a new plan, and writes an incident report for the lecturer if they're late anyway.
+<p align="center"><b>Get to class, or get proof why you didn't.</b></p>
 
-Built for the APU Cloud Innovation Hackathon 2026.
+<p align="center">
+  <a href="https://sampai-apu.web.app"><b>Live demo</b></a> ·
+  <a href="https://sampai-apu.web.app/sim">Simulator</a> ·
+  <a href="https://sampai-apu.web.app/admin">Dashboard</a> ·
+  <a href="docs/PITCH.md">Pitch brief</a>
+</p>
 
-**Making the pitch deck?** Start with [docs/PITCH.md](docs/PITCH.md): story, numbers, demo script, judge Q&A and slide outline.
+Sampai (Malay for *arrived*) is a commute app that gets APU students to class on public transport. It plans every trip around the student's real APSpace class, compares every way to campus (LRT, Rapid KL bus, the APU shuttle, walking or a taxi), watches the trip with live sources, and when the trip goes wrong anyway, writes a sourced incident report the lecturer can verify.
 
-## What it does
+Built for the **APU Cloud Innovation Hackathon 2026**, challenge: *Smart Campus & Student Experience*.
+
+---
+
+## The problem
+
+Getting to APU on public transport is a daily gamble.
+
+- Students juggle the LRT, Rapid KL buses, the APU shuttle and long walks. No single app knows their **class time**, the **APU shuttle schedule**, or what's going wrong on the way **right now**.
+- When a train stalls, a bus is stuck in traffic or a storm hits, students find out too late, with no plan B.
+- Arriving late with no record of why means an absence they can't explain.
+
+## What Sampai does
 
 | | |
 |---|---|
-| **Detects stalled trains** | Riders tap "I'm on the train" (or opt in once to auto-share on their commute). Their phone sends GPS and motion every few seconds. Several riders stopped on the same stretch at the same time is an incident. |
-| **Alerts with a plan** | Students on that line with a class soon get a push, plus options timed against their class: other trains, the APU shuttle, Rapid KL buses, walking or a taxi. |
-| **Plans every trip** | Route options from home to APU, timed to the real APU shuttle schedule (APSpace), Rapid KL bus timetables and traffic. Feeder bus → train → shuttle combinations included. |
-| **Real classes** | Type an intake code: Sampai reads the student's APSpace timetable and tutorial group. |
-| **What to bring** | Umbrella, water, sun protection or a mask, from rain forecasts, MET Malaysia storm warnings, heat, UV and haze, weighted by minutes outdoors. |
-| **Incident reports** | A third-person report for the lecturer: findings with their sources (Sampai riders, Rapid KL bus GPS, MET Malaysia, Open-Meteo), the student's journey and lateness, and a QR code to the public incident record. Works without an alert too. |
-| **Dashboard** | `/admin`: disruptions by line, hour and weather, worst stretches, operator notes. |
-| **Simulator** | `/sim`: spawn riders, stall a train, trigger rain, heat or haze. Everything simulated is labelled SIMULATED. |
+| **Plans around your class** | Type your intake code. Sampai reads your APSpace timetable and tutorial group, and every option says when to leave and whether it makes class. |
+| **Every way to campus** | Train lines (with transfers), the APU shuttle on its real schedule, Rapid KL buses (direct, bus + shuttle, or feeder bus + train), walking and taxi. Real street paths, fares, minutes outdoors, and a recommended pick with the reason. |
+| **Live disruption alerts** | Sampai watches your route with Rapid KL live bus GPS, MET Malaysia warnings, weather and riders on board. When something breaks, you get a push with options that still make class. |
+| **What to bring** | Umbrella, water, sun protection or a mask, from rain, MET storm warnings, heat, UV and haze, weighted by your minutes outdoors. |
+| **Local knowledge** | Fixes maps get wrong, kept in a simple rules file, e.g. a fence that blocks a walking path out of a condo. |
+| **Incident report** | A third-person PDF for the lecturer: what happened, according to which source, the student's journey and lateness, and a QR code to the public record. Works with or without an alert, and never claims a cause the records don't show. |
+| **Dashboard for APU** | Disruptions by line, hour and weather, worst stretches, and official notes that flow into reports. |
+| **Simulator** | Stall a train, jam a bus route, trigger rain, heat or haze, to demo the whole flow. Everything simulated is labelled SIMULATED. |
 
-## Architecture
+## Live data, no fake numbers
+
+| Source | Used for |
+|---|---|
+| APU APSpace | Timetables by intake and group, APU shuttle schedule |
+| Prasarana GTFS (data.gov.my) | Rail network, 8 lines and 179 station-to-station stretches |
+| Rapid KL bus GTFS + GTFS Realtime (data.gov.my) | 31 bus route patterns near APU, timetables, live bus positions |
+| MET Malaysia (data.gov.my) | Storm and heavy rain warnings |
+| Open-Meteo (MET Norway fallback) | Rain, heat, UV, air quality |
+| OpenStreetMap | Street routing and address search |
+| Riders' phones (opt-in) | Train stalls, since trains have no public live feed |
+
+## How it works
 
 ```
-phone (web app, PWA)                      Google Cloud / Firebase
- ├─ pings while on board ──► api (Cloud Run) ──► Pub/Sub ──► worker (Cloud Run)
- │                            │                                ├─ sliding-window stall detection
- │                            │                                ├─ Rapid KL bus GTFS-R polling
- │                            │                                ├─ MET Malaysia + Open-Meteo polling
- │                            │                                ├─ Gemini: alert text and best option
- │                            │                                └─ FCM push, BigQuery log
- │                            ├─ route options, geocoding, APSpace proxy
- │                            └─ incident reports (Gemini + PDF)
- └─ live state ◄──────────── Firestore (incidents, alerts, conditions, users)
+ phone (web app, PWA)                         backend
+ ├─ home, routes, alerts, reports ◄──── Firestore (live state: users, incidents, alerts, conditions)
+ ├─ trip pings (opt-in, on board) ──► api ──► Pub/Sub ──► worker
+ │                                     │                   ├─ rider stall detection (sliding window per stretch)
+ │                                     │                   ├─ Rapid KL bus GPS polling (stuck buses)
+ │                                     │                   ├─ MET Malaysia + weather + air quality polling
+ │                                     │                   └─ who's affected → Gemini alert → FCM push
+ │                                     ├─ route options (APSpace, shuttle, buses, trains, OSRM streets)
+ │                                     └─ incident reports (records → Gemini prose → PDF)
 ```
+
+**Google Cloud and Firebase:** Firebase Hosting (web), Firestore, Firebase Auth (anonymous), Firebase Cloud Messaging, Gemini, and Pub/Sub, Cloud Run, BigQuery and Cloud Scheduler in the Google Cloud deployment (`infra/`). For the hackathon demo the two Node services run on a free host with Pub/Sub swapped for a direct call, which is a config switch with the same code.
+
+**Gemini** writes alerts in English or Bahasa Melayu, picks the best option for the student's class, rain and heat, and writes the report prose from the records only. Every Gemini call has a template fallback, so nothing breaks without it.
+
+## Repository
 
 | Folder | What's in it |
 |---|---|
-| `web/` | React + Vite + Tailwind. Landing, onboarding, home, ride, profile, report, simulator, dashboard. |
-| `api/` | Express on Cloud Run. Pings in, routes, geocoding, reports, simulator endpoints. |
-| `worker/` | Pub/Sub push handler on Cloud Run. Detection, bus and weather polling, notifications. |
-| `shared/` | Types, rail network, time helpers, server clients (Firebase, Gemini, OSRM, APSpace). |
-| `data/` | `build-segments.ts` turns Prasarana GTFS into rail segments and bus lines (`data/out/`). `local_rules.json` holds local fixes maps get wrong. |
-| `scripts/` | Emulator launcher, smoke test, stall test. |
-| `infra/` | `setup.sh` (one-time Google Cloud setup) and `deploy.sh` (Cloud Run deploy). |
+| `web/` | React + Vite + Tailwind PWA: landing, onboarding, home, routes, ride, profile, report, simulator, dashboard, brand kit |
+| `api/` | Express: route options, geocoding, APSpace proxy, trip pings, reports (PDF), simulator endpoints |
+| `worker/` | Detection, bus and weather polling, alerting, incident logging |
+| `shared/` | Types, rail network, time helpers, server clients (Firebase, Gemini, OSRM, APSpace), what-to-bring rules |
+| `data/` | `build-segments.ts` turns Prasarana GTFS into rail segments and bus lines; `local_rules.json` holds local fixes |
+| `infra/` | Google Cloud setup and Cloud Run deploy scripts |
+| `docs/` | Pitch brief, submission summary, deployment handoff |
 
 ## Run it locally
 
@@ -62,42 +98,19 @@ npm run data
 npm run dev
 ```
 
-That starts the Firestore and Auth emulators, the worker (port 8081), the api (port 8080) and the web app (port 5173). Open http://localhost:5173.
+That starts the Firestore and Auth emulators, the worker (8081), the api (8080) and the web app (5173). Open http://localhost:5173.
 
-With no Firebase settings, everything runs against the local emulators (project `demo-sampai`). For Gemini, put an AI Studio key in `api/.env` and `worker/.env` (`GEMINI_API_KEY`). Without it, alerts and reports fall back to templates.
-
-Copy each `.env.example` to `.env` (or `.env.production` for the web build) and fill in what you need. Never commit `.env` files.
+With no Firebase settings everything runs on local emulators (project `demo-sampai`). For Gemini, put an AI Studio key in `api/.env` and `worker/.env` (`GEMINI_API_KEY`); without it, templates take over. Copy each `.env.example` to `.env` and fill in what you need. Never commit `.env` files.
 
 ## Deploy
 
-**Web app: Firebase Hosting (free on Spark).** Live at https://sampai-apu.web.app. `firebase.json` serves `web/dist` with deep links falling back to `index.html`. Build-time settings come from `web/.env.production` (Firebase web config + `VITE_API_URL`, git-ignored). Deploy from your laptop:
-
-```bash
-npx firebase-tools login
-```
-
-```bash
-npm run deploy:web
-```
-
-Security rules and indexes: `npm run deploy:rules`.
-
-**api and worker: Render (free).** `render.yaml` defines both services; step-by-step in [docs/render-handoff.md](docs/render-handoff.md). Firebase stays on the free Spark plan.
-
-**Alternative: Cloud Run** (needs the Firebase project on the Blaze plan). Each has a `Dockerfile`. Set `GCP_PROJECT`, `REGION`, `GEMINI_API_KEY`, `PUBLIC_WEB_URL` (the web app's URL) and, for the api, `WORKER_URL`.
-
-## Data sources
-
-- APU APSpace: timetables by intake and group, APU shuttle schedule
-- Prasarana GTFS static and Rapid KL bus GTFS Realtime, via data.gov.my (CC BY 4.0)
-- MET Malaysia weather warnings, via data.gov.my
-- Open-Meteo: forecast, apparent temperature, UV, air quality
-- OpenStreetMap: street routing (OSRM) and geocoding (Photon, Nominatim)
+- **Web:** Firebase Hosting at https://sampai-apu.web.app. Settings come from `web/.env.production` (git-ignored). `npx firebase-tools login`, then `npm run deploy:web`. Rules and indexes: `npm run deploy:rules`.
+- **api and worker:** `render.yaml` (free plan, step by step in [docs/render-handoff.md](docs/render-handoff.md)), or Cloud Run with the `Dockerfile`s and `infra/deploy.sh` on the Blaze plan.
 
 ## Privacy
 
-Sign-in is anonymous: no student ID or email. Location is shared only while a trip is on, and stops at the destination station or after 90 minutes. Raw locations aren't stored. "Recently used" profile values stay in the browser.
+Anonymous sign-in: no student ID or email. Trip location is shared only when a student opts in, only during the trip, and stops at the destination or after 90 minutes. Raw locations aren't stored. "Recently used" profile values stay in the browser.
 
-## Status
+## Status and limits
 
-Prototype. Simulated riders and incidents are always labelled SIMULATED; timetables, shuttle times, bus GPS and weather are live.
+A working prototype. Timetables, shuttle times, bus GPS, weather and air quality are live; simulated riders and incidents are always labelled SIMULATED. Train ride times between stations and fares are estimates. On the web, trip sharing runs while the app is open; a native wrapper with background location is next, followed by planning the trip home after the last class.

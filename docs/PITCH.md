@@ -1,33 +1,37 @@
 # Sampai: pitch deck brief
 
-Everything the deck team needs in one place: the story, the numbers, what to show, what to say, what judges will ask, and what's honest to claim. Built for the APU Cloud Innovation Hackathon 2026 (deadline 13 Nov 2026, 12:00 MYT).
+Everything the deck team needs: the story, the numbers, what to show, what to say, what judges will ask, and what's honest to claim. APU Cloud Innovation Hackathon 2026, challenge *Smart Campus & Student Experience*.
 
 - **Live app:** https://sampai-apu.web.app
 - **Simulator (demo controls):** https://sampai-apu.web.app/sim
 - **Dashboard:** https://sampai-apu.web.app/admin
-- **Brand kit (colours, logos, taglines):** https://sampai-apu.web.app/brand and `BRAND.md`
-- **Logo files for slides:** `web/public/brand/` (`sampai-logo.svg` for light slides, `sampai-logo-ink.svg` for dark)
-- **Code:** https://github.com/williamjonathanliem/sampai
+- **Brand kit:** https://sampai-apu.web.app/brand and `BRAND.md`. Logos in `web/public/brand/`. Share image: `web/public/og-image.png`.
+- **Code:** https://github.com/williamjonathanliem/sampai (judges will read the README first)
+- **Submission summary:** `docs/submission.md`
+
+> **Framing rule:** Sampai is a **transport app for getting to class**, across every mode: LRT, Rapid KL bus, APU shuttle, walking, taxi. Rider-based train stall detection is **one** of the live inputs (trains have no public feed), not the headline. Don't oversell it.
 
 ---
 
 ## 1. The one-liner
 
-> **Your train stopped. You'll still get to class.**
-> Sampai turns APU students' phones into a live sensor for the LRT. It spots a stalled train, buzzes you with the fastest way to campus, and writes an incident report for your lecturer if you're late anyway.
+> **Get to class, or get proof why you didn't.**
+> Sampai plans every trip to APU around your real class, across trains, buses, the APU shuttle, walking and taxi, warns you when something on the way breaks, and writes a sourced report for your lecturer if you're late anyway.
 
-Core tagline: **Get to class, or get proof why you didn't.**
-Name: *Sampai* is Malay for "arrived".
+*Sampai* is Malay for "arrived".
 
 ---
 
 ## 2. The problem (slide 2)
 
-**Malaysia publishes live GPS for every Rapid KL bus. Not for a single train.**
+**Getting to APU on public transport is a daily gamble.**
 
-So nobody knows a train has stalled until the people stuck on it do. Students find out on the platform, with no plan B and nothing to show their lecturer.
+- Students juggle the LRT, Rapid KL buses, the APU shuttle and long walks.
+- No app knows all three things that matter: **your class time**, **the APU shuttle schedule**, and **what's going wrong on the way right now**.
+- Google Maps doesn't know your class, the shuttle, or that the train you're on just stopped (Malaysia has live GPS for buses, but none for trains).
+- When it goes wrong (a stalled train, a bus stuck in traffic, a flash storm), students find out too late, with no plan B and nothing to show their lecturer.
 
-It happened all year (real headlines, use as evidence on the slide):
+Evidence it happens (real headlines, on the landing page):
 
 | Source | Date | Headline |
 |---|---|---|
@@ -36,96 +40,78 @@ It happened all year (real headlines, use as evidence on the slide):
 | SoyaCincau | Sep 2026 | Signalling disruption between USJ 21 and Taipan |
 | The Star | Sep 2026 | Flash floods hit parts of the Klang Valley |
 
-Links are on the landing page ("The gap" section).
-
-**Who feels it:** APU students commuting on the Sri Petaling line to Bukit Jalil, then the APU shuttle or a 45-minute walk. One stalled train = late for class, marked absent, no proof.
-
 **Three pains, one app:**
-1. **"I didn't know."** No live signal for trains.
-2. **"I didn't know what else to do."** Google Maps doesn't know your class time, the APU shuttle schedule, or that the train you're on just stopped.
-3. **"My lecturer didn't believe me."** No official record of short disruptions.
+1. **"What's my best way in today?"** Too many modes, none planned around class.
+2. **"Something broke on the way."** Trains, buses and weather, with no warning and no plan B.
+3. **"My lecturer didn't believe me."** No record of why you were late.
 
 ---
 
-## 3. The solution (slide 3)
+## 3. The solution (slide 3): Plan · Watch · Prove
 
-| Pain | What Sampai does |
+| | What Sampai does |
 |---|---|
-| No live train signal | **Riders are the sensor.** Phones on board share speed and motion. Several riders stopped between the same two stations = an incident. |
-| No plan B | **A plan timed to your class.** Other lines, the APU shuttle (real APSpace schedule), Rapid KL buses, walking or a taxi, each with "arrive 08:52, on time" or "late". Sampai picks one and says why. |
-| No proof | **A verifiable incident report.** Third person, every finding cites its source (Sampai riders, Rapid KL bus GPS, MET Malaysia), the student's journey and lateness, and a QR code the lecturer scans to check it. |
+| **Plan** | From your intake code, Sampai reads your APSpace timetable. It compares every way to campus (train, APU shuttle, Rapid KL bus, walking, taxi) with real street paths, the real shuttle schedule and bus timetables, and says when to leave and whether each option makes class. It recommends one and says why. |
+| **Watch** | It watches your trip with live sources: Rapid KL bus GPS, MET Malaysia warnings, weather and air quality, and riders on board for trains. If something breaks, you get a push with options that still make class, plus what to bring (umbrella, water, mask). |
+| **Prove** | Late anyway? One tap makes a third-person incident report for your lecturer: what happened, according to which source, your journey and lateness, and a QR code to the public record. It never claims a cause the records don't show. |
 
 ---
 
-## 4. How it works (slide 4, architecture)
+## 4. How it works (slide 4)
 
-**Sense → Detect → Alert and prove.**
+```
+phone app ──► api ──► route options (APSpace + shuttle + buses + trains + streets)
+     ▲          └───► incident reports (records → Gemini → PDF)
+     │
+Firestore ◄── worker ◄── live sources: Rapid KL bus GPS · MET Malaysia · weather · air quality · riders on board
+     │            └──► who's affected → Gemini writes the alert → push (FCM)
+```
 
-1. **Sense.** A rider taps "I'm on the train" (or opts in once to start automatically on their commute). Their phone sends GPS and motion every few seconds, only for that trip, anonymously.
-2. **Detect.** Pings go through a message queue to a worker that keeps a sliding window per stretch of track. Riders stopped together on the same stretch = incident, with a confidence level. A rider can also tap "Train's not moving" to confirm faster.
-3. **Alert and prove.** Every student whose route uses that stretch and has a class soon gets a push with reroute options. Gemini writes the alert and picks the best option. Every incident is logged for the dashboard and the incident report.
+**Google stack:** Firebase Hosting, Firestore, Firebase Auth (anonymous), Firebase Cloud Messaging, Gemini; designed for Cloud Run, Pub/Sub, BigQuery and Cloud Scheduler (scripts in `infra/`).
 
-**Designed for Google Cloud:**
-
-| Piece | Google Cloud / Firebase |
-|---|---|
-| Phone pings, bus and weather feeds | Pub/Sub topics |
-| api + worker | Cloud Run (2 Node services) |
-| Live state (incidents, alerts, users) | Firestore |
-| Push notifications | Firebase Cloud Messaging |
-| Anonymous sign-in | Firebase Auth |
-| Alert text, best option, report prose | Gemini (AI Studio / Vertex AI) |
-| Disruption history | BigQuery + Looker Studio |
-| Polling feeds | Cloud Scheduler |
-
-**What the live demo actually runs on (be honest if asked):** Firebase (Firestore, Auth, FCM, Hosting for the web app) on the free Spark plan; the api and worker on Render's free plan with Pub/Sub swapped for a direct call (a config switch, same code). The Google Cloud deployment scripts are in `infra/`. Reason: Cloud Run needs a billing account, and we kept the demo at RM 0.
+**Be honest if asked:** the demo's two Node services run on a free host (Render) instead of Cloud Run, because Cloud Run needs a billing account. Same code; Pub/Sub is a config switch. Everything else is Google/Firebase.
 
 ---
 
 ## 5. Features to show (slides 5 to 8)
 
-### Home screen ("what do I do right now")
-- **Next class from APSpace** (real timetable by intake code + tutorial group), "Leave by 07:49", "Class starts 08:30".
-- **APU shuttle timing** from the real APSpace shuttle schedule, ride time adjusted for traffic at that hour.
-- **Before you leave · bring:** umbrella (rain or MET storm warning), water (heat, heatwave at 40°C+), cap or sunscreen (UV 8+), face mask or N95 (haze, from live air quality).
-- **Change route** in place, see it on the map, save.
-- **Make report** any time, even without an alert.
+**Home ("what do I do right now")**
+- Next class from APSpace, "Leave by", class start, trip minutes.
+- APU shuttle: which departure to catch, ride time adjusted for traffic.
+- Before you leave, bring: umbrella / water / cap / mask, from live weather, MET warnings and air quality.
+- Change route in place; Make report any time.
 
-### Route options (like Google Maps, but it knows your class)
-- Every option: leave → arrive, "on time · 6 min spare" or "13 min late", fare (or Free), minutes outdoors.
-- Modes: LRT/MRT lines (incl. transfers to the Sri Petaling line), APU shuttle from LRT Bukit Jalil and hostels, **every Rapid KL bus within 7 km of APU** (straight to APU, bus + shuttle, or feeder bus + train), walking, taxi.
-- Real street paths (OpenStreetMap routing), no "flying through buildings".
-- **What only Sampai knows** on each option: "This line stalled 3 times in the last 30 days", "If this line stalls, Sampai buzzes you", "Runs every 50 min. Miss the 08:14 and the next is 50 min later", "Bring umbrella: 63% chance of rain (11 min outdoors)".
-- **Local knowledge maps get wrong:** e.g. a fence blocks Parkhill Residence from Jalan Teknologi on foot, so Sampai routes walkers via LRT Bukit Jalil.
+**Route options (like a maps app, but it knows your class)**
+- Each option: leave → arrive, "on time · 6 min spare" or "13 min late", fare or Free, minutes outdoors.
+- Modes: LRT/MRT (with transfers), APU shuttle from LRT Bukit Jalil and hostels, Rapid KL buses (straight to APU, bus + shuttle, feeder bus + train), walking, taxi.
+- Real street paths (no "flying through buildings").
+- What only Sampai knows: "Runs every 50 min. Miss the 08:14 and the next is 50 min later", "Bring umbrella: 63% chance of rain, 11 min outdoors", "This line stalled 3 times in 30 days".
+- Local knowledge: a fence blocks Parkhill Residence from Jalan Teknologi on foot, so walks go via LRT Bukit Jalil.
 - **Sampai pick** with a one-line reason.
 
-### On the train
-- One screen: speed, GPS accuracy, pings sent. "Train's not moving" button. Stops by itself at your station or after 90 minutes.
+**Alerts**
+- Push when your route is affected: stuck buses (Rapid KL GPS), a storm warning (MET), or a stalled train (riders). Options against your class, "Open Grab" shortcut for taxis, "You'll be about 12 min late → Incident report".
 
-### The alert
-- Push + vibration. "Sri Petaling line stalled before Bukit Jalil." Options sheet with arrival times against your class. "Open Grab" shortcut for the taxi option. "You'll be about 12 min late → Incident report".
+**Incident report (the "proof" slide)**
+- PDF in English or Bahasa Melayu: Summary, Findings (each with a Source line), the student's journey, Conclusion, QR verification.
+- Also without an alert ("Make report"): it checks the last 3 hours on your route and says honestly if nothing was recorded.
 
-### Incident report (the "proof" slide)
-- PDF, English or Bahasa Melayu.
-- **1. Summary** (third person), **2. Findings** each with a source line, **3. The student's journey** (boarded, alerted, alternative, arrival, class start, lateness), **4. Conclusion**, verification panel with QR code to the public incident page.
-- Only claims what the records show. With no disruption on record, it writes a "Journey Report" that says so honestly.
-
-### Dashboard (`/admin`) for student services
-- Disruptions by line, by hour, in rain vs dry, worst stretches; add an official operator note that then appears on reports.
+**Dashboard (`/admin`)** for student services: disruptions by line, hour, rain vs dry, worst stretches, official notes.
 
 ---
 
-## 6. Why not just Google Maps? (slide 9, differentiation)
+## 6. Why not just Google Maps? (slide 9)
 
 | | Google Maps | Sampai |
 |---|---|---|
-| Knows a train stalled right now | No (no live train feed in Malaysia) | Yes, from riders on board |
 | Knows your class time | No | Yes, from APSpace |
 | APU shuttle schedule | No | Yes, from APSpace |
-| Tells you before you're stuck | No | Push alert with a plan |
-| Proof for your lecturer | No | Incident report with sources + QR |
-| Weather "what to bring" per route | No | Yes |
-| Local fixes (fences, gates) | Sometimes | Yes, a rules file students can extend |
+| Says if each option makes class | No | Yes |
+| Live train problems in Malaysia | No public feed | From riders on board |
+| Stuck buses, storm warnings on your route | Partly | Yes, with a new plan |
+| What to bring for the weather on your route | No | Yes |
+| Proof for your lecturer | No | Sourced report + QR |
+| Local fixes (fences, gates) | Sometimes | Yes, a rules file |
 
 ---
 
@@ -133,111 +119,87 @@ Links are on the landing page ("The gap" section).
 
 | Number | What |
 |---|---|
-| 8 | Rail lines covered (Prasarana network data) |
-| 179 | Station-to-station stretches monitored |
-| 31 | Rapid KL bus route patterns within 7 km of APU used for routing |
+| 5 | Ways to campus compared: train, APU shuttle, bus, walk, taxi |
+| 31 | Rapid KL bus route patterns within 7 km of APU used for planning |
 | 11 | APU shuttle pick-up points (APSpace) |
-| ~10 s | Time to confirm a stall when 2 riders tap "Train's not moving" (tested) |
-| 30 s | Detection window in demo mode (2 riders stopped together) |
-| 3 riders / 2 min | Threshold in normal use (one phone can never trigger an alert) |
-| 6 | Live data sources (below) |
+| 8 / 179 | Rail lines / station-to-station stretches covered |
+| 7 | Live data sources (APSpace, Prasarana GTFS, Rapid KL GTFS-R, MET Malaysia, Open-Meteo, OpenStreetMap, riders) |
+| 2 | Languages: English, Bahasa Melayu |
 | RM 0 | Running cost of the demo |
-| 2 | Languages (English, Bahasa Melayu) |
-
-**Data sources (all live except riders in the simulator):** APU APSpace (timetable + shuttle), Prasarana GTFS rail network, Rapid KL bus GTFS Realtime (data.gov.my), MET Malaysia warnings (data.gov.my), Open-Meteo (rain, heat, UV, air quality), OpenStreetMap (street routing, addresses).
 
 ---
 
 ## 8. Live demo script (about 2 minutes)
 
-**Before going on stage (5 min early):**
-1. Open https://sampai-api.onrender.com/apu/status and wait until `"rows"` is above 0 (wakes the free server, loads APSpace).
-2. Laptop: `/sim` and `/admin` in two tabs. Phone: the app, signed in as demo student **Wei Jie** (the "running late" profile) or your own profile.
-3. Allow notifications on the phone.
+**5 min before:** open https://sampai-api.onrender.com/apu/status until `"rows"` is above 0 (wakes the free server). Laptop: `/sim` and `/admin`. Phone: the app as demo student **Wei Jie** (running late) or your own profile. Allow notifications.
 
 | Time | Say | Do |
 |---|---|---|
-| 0:00 | "Every APU student has been stuck on a stalled LRT with no idea what to do." | Phone home screen: next class from APSpace, leave-by time, what to bring. |
-| 0:15 | "Malaysia shares live GPS for every bus. Not one train. So riders' phones are the sensors." | `/sim`: **Spawn riders**. Dots move along the Sri Petaling line. |
-| 0:30 | "Two riders stop between the same stations…" | `/sim`: **Stall train**. |
-| 0:45 | | Phone buzzes. Alert: options with arrival times against the class. |
-| 1:00 | "Sampai knows your class, the APU shuttle and every bus. It picks the option that still makes class." | Open the alert sheet, point at "Sampai pick". |
-| 1:15 | "Late anyway? One tap." | **Incident report** → Generate → show findings with sources → Download PDF → QR. |
-| 1:35 | "Weather breaks routes too." | `/sim`: **Heavy rain** or **Haze**. Home: "Bring umbrella" / "N95 mask" appears. |
-| 1:50 | "Every disruption is logged for APU." | `/admin`: by line, hour, weather. |
+| 0:00 | "Every APU student juggles trains, buses and the shuttle, and none of their apps know when class starts." | Phone home: next class from APSpace, leave-by time, what to bring. |
+| 0:15 | "Sampai compares every way in and tells you which still makes class." | Change route: options with on time / late, fares, Sampai pick. |
+| 0:35 | "Then it watches the trip. Buses have live GPS, weather has MET warnings, and for trains, riders' phones fill the gap." | `/sim`: **T580 stuck** or **Stall train**. |
+| 0:50 | | Phone buzzes: new options against the class. |
+| 1:05 | "Weather breaks trips too." | `/sim`: **Heavy rain** or **Haze**; home shows "Bring umbrella" / "N95 mask". |
+| 1:20 | "Late anyway? One tap." | **Incident report** → Generate → findings with sources → PDF → QR. |
+| 1:45 | "And APU sees every disruption." | `/admin`. |
 
-**If something fails:** the alert still appears on the home screen without push; reports fall back to a template without Gemini; play the backup video.
+**If something fails:** the alert still shows on the home screen without push; reports fall back to a template without Gemini; play the backup video.
 
 ---
 
-## 9. Judge Q&A (prepare these)
+## 9. Judge Q&A
 
-**"Can one person fake a breakdown?"**
-No. An incident needs several riders stopped on the same stretch at the same time (3 in normal use). One phone alone never triggers an alert, and rider count + confidence are shown everywhere.
+**"How is this different from Google Maps?"** It plans around your class and the APU shuttle, says whether each option makes it, watches the trip for problems Maps doesn't see, and gives you proof. See section 6.
 
-**"What if I'm the only Sampai rider on my train?"**
-You still get alerts from other riders, Rapid KL live bus GPS and MET Malaysia warnings. More riders = faster, more confident detection. That's the network effect: APU alone has thousands of LRT commuters.
+**"Where does the live data come from?"** Rapid KL bus GPS and MET Malaysia via data.gov.my, Open-Meteo for weather and air quality, APSpace for classes and shuttles. For trains there's no public feed, so riders who opt in share speed and motion during the trip.
 
-**"Privacy?"**
-Anonymous sign-in, no student ID or email. Location is shared only during a trip, stops at your station or after 90 minutes. Raw locations aren't stored.
+**"Can one person fake a train stall?"** No. It needs several riders stopped on the same stretch at once, and rider count and confidence are shown everywhere.
 
-**"Will lecturers accept the report?"**
-Their call. The report only states facts with sources and a QR code to a public incident record, in the third person. It never claims a cause the records don't show.
+**"Privacy?"** Anonymous sign-in, no student ID or email. Trip sharing is opt-in, only during the trip, and stops at the destination or after 90 minutes. Raw locations aren't stored.
 
-**"Does it run in the background?"**
-On the web, sharing runs while the app is open (opt in once and it starts by itself at commute time near your line). A native wrapper with background location is the next step.
+**"Will lecturers accept the report?"** Their call. It states facts with sources and a QR code to a public record, in the third person, and never claims a cause the records don't show.
 
-**"Why Gemini?"**
-Writes alerts in plain English or Malay, picks the best option for your class, rain and heat, and writes the report prose using only facts from the records. Without Gemini, templates take over. Nothing breaks.
+**"Why Gemini?"** Writes alerts in English or Malay, picks the best option for your class, rain and heat, and writes report prose from the records only. Templates take over without it.
 
-**"How does it scale / why cloud?"**
-Pub/Sub absorbs bursts of pings at rush hour, Cloud Run scales the worker per stretch, Firestore pushes live state to every phone, BigQuery keeps history for APU and Prasarana.
+**"Does it run in the background?"** On the web, while the app is open (opt in once and it starts by itself at commute time). A native app with background location is next.
 
-**"Is the demo fake?"**
-Riders and stalls started from the simulator are labelled SIMULATED on screen and in the data. Timetables, shuttle times, bus GPS, weather and air quality are live. Real phone stall detection was tested with phones.
+**"Is the demo fake?"** Simulated riders and incidents are labelled SIMULATED. Timetables, shuttle times, bus GPS, weather and air quality are live.
 
 ---
 
 ## 10. Honest limits (don't overclaim)
 
-- Rider-based detection needs riders. Day one, coverage depends on adoption (that's why bus GPS and MET warnings are also inputs).
-- Web app: background tracking only while the app is open.
-- Train ride times between stations are estimates (about 2 min per station); bus times come from Rapid KL's published frequencies, not live arrival predictions.
-- Fares are estimates (rail distance fare, taxi formula).
-- The live demo runs on free tiers (Render sleeps after 15 min idle; wake it before presenting).
-- "Getting home" (APU → home after the last class) is designed but not built.
+- Train stall detection depends on riders using the app; coverage grows with adoption. Buses and weather don't need riders.
+- On the web, trip sharing runs while the app is open.
+- Train ride times between stations and fares are estimates; bus times come from published frequencies, not live arrival predictions.
+- The demo's servers are on a free host and sleep after 15 min idle; wake them before presenting.
+- "Getting home" after the last class is designed but not built.
 
 ---
 
 ## 11. Roadmap (closing slide)
 
-1. **Getting home:** after your last class, the same plan in reverse (the APU shuttle runs both ways).
-2. **Native app** (Capacitor) for background location and station geofences: fully hands-free.
-3. **Live train ETAs** from rider speeds, shared back to every rider on the line.
-4. **Operator view** for Prasarana / Rapid KL: rider-sourced stall alerts before the control room hears about them.
-5. **Other campuses** along the LRT and MRT lines (Taylor's, Sunway, UM): same engine, their timetable feed.
+1. **Getting home:** the same plan in reverse after your last class (the shuttle runs both ways).
+2. **Native app** for background trip sharing and station geofences.
+3. **Live arrival times** for buses and trains, shared back to riders.
+4. **For APU:** shuttle planning from real demand and disruption data.
+5. **Other campuses** along the LRT and MRT lines: same engine, their timetable feed.
 
 ---
 
 ## 12. Suggested deck outline (10 slides)
 
-1. **Title:** logo, "Your train stopped. You'll still get to class.", team names.
-2. **Problem:** "Live GPS for every bus. Not a single train." + 4 headlines.
-3. **The moment:** a student stuck between Sri Petaling and Bukit Jalil at 08:15, class at 08:30. No signal, no plan, no proof.
-4. **Solution:** three columns: Sense · Plan · Prove.
-5. **How it works:** Sense → Detect → Alert diagram + Google Cloud stack.
+1. **Title:** logo, "Get to class, or get proof why you didn't.", team names.
+2. **Problem:** trains, buses, shuttle, walks, and no app knows your class. Headlines.
+3. **The morning:** 08:05, class at 08:30. Which way in? Then the bus is stuck. Then it rains.
+4. **Solution:** Plan · Watch · Prove.
+5. **How it works:** data sources → Sampai → phone, on Google Cloud + Gemini.
 6. **Live demo** (or screenshots: home, route options, alert, report).
-7. **The report:** PDF screenshot, highlight "Source:" lines and the QR code.
-8. **Why not Google Maps:** comparison table (section 6).
-9. **Numbers + data sources** (section 7).
-10. **Roadmap + ask:** what we'd build next, and what APU could do with the dashboard.
+7. **The report:** PDF screenshot, highlight the Source lines and QR code.
+8. **Why not Google Maps:** section 6 table.
+9. **Numbers + data sources:** section 7.
+10. **Roadmap + ask.**
 
-**Visual style:** light chalk background `#F5F5F9`, ink text `#1C1B28`, violet `#5E3EB6` for emphasis, green `#0B7643` = on time, red `#C2272D` = stalled/late, yellow `#FACA4B` only as a dot/accent fill. Font: Manrope. No dark neon "transit app" look, no gradients, no emoji. Calm, plain, decisive copy.
+**Visual style:** chalk background `#F5F5F9`, ink `#1C1B28`, violet `#5E3EB6` for emphasis, green `#0B7643` on time, red `#C2272D` late or stalled, yellow `#FACA4B` only as a dot accent. Manrope. No dark neon, no gradients, no emoji.
 
-**Screenshots worth taking** (desktop, 1440 px wide):
-- Landing hero (`/`)
-- Home with "Before you leave · bring" visible (`/app`, after triggering Heavy rain or Haze in `/sim`)
-- Route options in the profile (`/profile`) with "Sampai pick" and bus options
-- Alert sheet after stalling a train
-- Incident report page + PDF (`/letter/...` or `/report`)
-- Dashboard (`/admin`)
+**Screenshots worth taking** (desktop 1440 px): landing; home with "Before you leave · bring" (after Heavy rain or Haze in `/sim`); route options with Sampai pick and bus options; alert sheet; report page + PDF; dashboard.
