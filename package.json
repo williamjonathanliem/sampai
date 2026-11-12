@@ -10,6 +10,8 @@
     "dev:api": "npm run dev -w api",
     "dev:worker": "npm run dev -w worker",
     "dev:web": "npm run dev -w web",
+    "deploy:web": "npm run build -w web && npx --yes firebase-tools@13 deploy --only hosting --project sampai-437f3",
+    "deploy:rules": "npx --yes firebase-tools@13 deploy --only firestore:rules,firestore:indexes --project sampai-437f3",
     "dev": "concurrently -n emu,worker,api,web -c gray,magenta,cyan,green \"npm:emulators\" \"npm:dev:worker\" \"npm:dev:api\" \"npm:dev:web\""
   },
   "devDependencies": {

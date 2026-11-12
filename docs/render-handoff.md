@@ -6,7 +6,7 @@
 
 ## Where things stand
 
-- Web app: Cloudflare (`wrangler.jsonc` at repo root). Builds from `main`.
+- Web app: Firebase Hosting, https://sampai-437f3.web.app (`npm run deploy:web` from a laptop with `web/.env.production`).
 - Database, sign-in, push: Firebase project `sampai-437f3`, Spark plan.
 - api + worker: **not deployed yet.** That's this task.
 - Without the api, the site loads but route options, address search, reports and the simulator fail.
@@ -19,9 +19,9 @@
 4. **Fill the blank env vars:**
    - `GEMINI_API_KEY` on both (AI Studio key, free; the same one in `api/.env` locally).
    - `WORKER_URL` on the api: the worker's Render URL, e.g. `https://sampai-worker.onrender.com`.
-   - `PUBLIC_WEB_URL` on both: the Cloudflare site URL (used in report QR codes).
+   - `PUBLIC_WEB_URL` on both: https://sampai-437f3.web.app (used in report QR codes).
 5. **Deploy both.** Check `https://<api>.onrender.com/net` returns JSON.
-6. **Point the web app at the api.** Cloudflare > the site > Settings > Variables: `VITE_API_URL=https://<api>.onrender.com`. Redeploy.
+6. **Point the web app at the api.** In `web/.env.production`: `VITE_API_URL=https://<api>.onrender.com`, then `npm run deploy:web`.
 7. **Firestore rules and indexes**, if not done yet: `npx firebase-tools deploy --only firestore --project sampai-437f3` (works on Spark).
 8. **Smoke test** on the live site: onboard with an intake code, search a home, see route options, open `/sim`, stall a train, get the alert, make a report.
 
@@ -40,7 +40,7 @@
 | api logs `Could not load the default credentials` | Secret file missing or not named `firebase-sa.json` |
 | api tries `127.0.0.1:8085` | `GCP_PROJECT` not set (it falls back to the emulators) |
 | Alerts never arrive | `WORKER_URL` wrong, or the worker is asleep |
-| Site calls `:8080` | `VITE_API_URL` not set in Cloudflare, or not redeployed after setting it |
+| Site calls `:8080` | `VITE_API_URL` empty in `web/.env.production`, or not redeployed after setting it |
 
 ## Next feature after deploy
 

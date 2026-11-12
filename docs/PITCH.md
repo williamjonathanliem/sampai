@@ -2,10 +2,10 @@
 
 Everything the deck team needs in one place: the story, the numbers, what to show, what to say, what judges will ask, and what's honest to claim. Built for the APU Cloud Innovation Hackathon 2026 (deadline 13 Nov 2026, 12:00 MYT).
 
-- **Live app:** https://sampai.williamjonathan.workers.dev
-- **Simulator (demo controls):** https://sampai.williamjonathan.workers.dev/sim
-- **Dashboard:** https://sampai.williamjonathan.workers.dev/admin
-- **Brand kit (colours, logos, taglines):** https://sampai.williamjonathan.workers.dev/brand and `BRAND.md`
+- **Live app:** https://sampai-437f3.web.app
+- **Simulator (demo controls):** https://sampai-437f3.web.app/sim
+- **Dashboard:** https://sampai-437f3.web.app/admin
+- **Brand kit (colours, logos, taglines):** https://sampai-437f3.web.app/brand and `BRAND.md`
 - **Logo files for slides:** `web/public/brand/` (`sampai-logo.svg` for light slides, `sampai-logo-ink.svg` for dark)
 - **Code:** https://github.com/williamjonathanliem/sampai
 
@@ -78,7 +78,7 @@ Links are on the landing page ("The gap" section).
 | Disruption history | BigQuery + Looker Studio |
 | Polling feeds | Cloud Scheduler |
 
-**What the live demo actually runs on (be honest if asked):** Firebase (Firestore, Auth, FCM) on the free Spark plan; the web app on Cloudflare; the api and worker on Render's free plan with Pub/Sub swapped for a direct call (a config switch, same code). The Google Cloud deployment scripts are in `infra/`. Reason: Cloud Run needs a billing account, and we kept the demo at RM 0.
+**What the live demo actually runs on (be honest if asked):** Firebase (Firestore, Auth, FCM, Hosting for the web app) on the free Spark plan; the api and worker on Render's free plan with Pub/Sub swapped for a direct call (a config switch, same code). The Google Cloud deployment scripts are in `infra/`. Reason: Cloud Run needs a billing account, and we kept the demo at RM 0.
 
 ---
 

@@ -70,10 +70,17 @@ Copy each `.env.example` to `.env` (or `.env.production` for the web build) and 
 
 ## Deploy
 
-**Web app: Cloudflare.** `wrangler.jsonc` at the repo root builds the web workspace and serves `web/dist`, with deep links (`/app`, `/report`, `/incident/:id`) falling back to `index.html`. In the Cloudflare dashboard, set these build variables:
+**Web app: Firebase Hosting (free on Spark).** Live at https://sampai-437f3.web.app. `firebase.json` serves `web/dist` with deep links falling back to `index.html`. Build-time settings come from `web/.env.production` (Firebase web config + `VITE_API_URL`, git-ignored). Deploy from your laptop:
 
-- `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID`, `VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_VAPID_KEY`
-- `VITE_API_URL`: the deployed api's URL
+```bash
+npx firebase-tools login
+```
+
+```bash
+npm run deploy:web
+```
+
+Security rules and indexes: `npm run deploy:rules`.
 
 **api and worker: Render (free).** `render.yaml` defines both services; step-by-step in [docs/render-handoff.md](docs/render-handoff.md). Firebase stays on the free Spark plan.
 
