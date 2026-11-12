@@ -8,8 +8,10 @@ Tokens live in `web/src/index.css` (`@theme`). Components live in `web/src/compo
 - Semantic: `go` (running / on time), `stop` (stalled / late), `warn` (simulated, advisory), `rain` (weather). Each has a `-soft` background tint. Text on a soft tint uses the strong tone, never gray.
 - Rail lines keep their operator colors on maps and charts only.
 
+Brand names, logo and taglines: see `BRAND.md` and `/brand`.
+
 ## Type
-Plus Jakarta Sans for everything. Times and numbers use `tabular-nums`. Scale (rem): 0.75 / 0.8125 / 0.875 / 1 / 1.125 / 1.375 / 1.75 / 2.25. Labels are sentence case; small caps-tracking only for section eyebrows.
+Manrope for everything. Marketing pages (`/welcome`, `/brand`) use the named text style utilities in `index.css` (`heading-1`…`caption-5`) and Phosphor icons, per the landing-page-design skill. Times and numbers use `tabular-nums`. Scale (rem): 0.75 / 0.8125 / 0.875 / 1 / 1.125 / 1.375 / 1.75 / 2.25. Labels are sentence case; small caps-tracking only for section eyebrows.
 
 ## Spacing and shape
 4px base. Page gutter 20px on phones. Section gap 24px; related items 8–12px. Radius: 10 (controls), 16 (panels), 24 (sheets). Hairline borders, no shadows except the bottom sheet and sticky action bar.

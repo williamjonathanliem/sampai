@@ -2,7 +2,7 @@
 @import "leaflet/dist/leaflet.css";
 
 @theme {
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
   /* neutrals, tinted toward violet */
@@ -34,7 +34,37 @@
 
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  /* brand base curve (landing, brand page) */
+  --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
 }
+
+/* ---------- named text styles (landing-page-design B1) ---------- */
+@utility heading-1 { font-size: 3.75rem; line-height: 1; font-weight: 600; letter-spacing: -0.035em; }
+@utility heading-2 { font-size: 3rem; line-height: 1; font-weight: 600; letter-spacing: -0.03em; }
+@utility heading-3 { font-size: 2.25rem; line-height: 2.5rem; font-weight: 600; letter-spacing: -0.025em; }
+@utility heading-4 { font-size: 1.875rem; line-height: 2.25rem; font-weight: 600; letter-spacing: -0.02em; }
+@utility heading-5 { font-size: 1.5rem; line-height: 2rem; font-weight: 600; letter-spacing: -0.015em; }
+@utility heading-6 { font-size: 1.25rem; line-height: 1.75rem; font-weight: 600; letter-spacing: -0.01em; }
+@utility title-1 { font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; }
+@utility title-2 { font-size: 1.125rem; line-height: 1.75rem; font-weight: 500; }
+@utility title-3 { font-size: 1rem; line-height: 1.5rem; font-weight: 500; }
+@utility title-4 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; }
+@utility title-5 { font-size: 0.75rem; line-height: 1rem; font-weight: 500; }
+@utility body-1 { font-size: 1rem; line-height: 1.5rem; font-weight: 600; }
+@utility body-2 { font-size: 1rem; line-height: 1.5rem; font-weight: 500; }
+@utility body-3 { font-size: 1rem; line-height: 1.5rem; font-weight: 400; }
+@utility body-4 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; }
+@utility body-5 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; }
+@utility body-6 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 400; }
+@utility button-lg { font-size: 1.125rem; line-height: 1.75rem; font-weight: 600; }
+@utility button-md { font-size: 1rem; line-height: 1.5rem; font-weight: 600; }
+@utility button-sm { font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; }
+@utility button-xsm { font-size: 0.75rem; line-height: 1rem; font-weight: 600; }
+@utility caption-1 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; }
+@utility caption-2 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 400; }
+@utility caption-3 { font-size: 0.75rem; line-height: 1rem; font-weight: 600; }
+@utility caption-4 { font-size: 0.75rem; line-height: 1rem; font-weight: 500; }
+@utility caption-5 { font-size: 0.75rem; line-height: 1rem; font-weight: 400; }
 
 html, body, #root { height: 100%; }
 body {
@@ -119,4 +149,73 @@ body {
   .scene-rider, .scene-stall, .scene-alert { animation: none; }
   .scene-rider { fill: var(--color-stop); transform: translateX(var(--to)); }
   .scene-stall, .scene-alert { opacity: 1; }
+}
+
+/* ---------- landing + brand page ---------- */
+.lp h1, .lp h2, .lp h3 { text-wrap: balance; }
+.lp p, .lp li, .lp dd { text-wrap: pretty; }
+
+/* hero heading: the one gradient, on text only (light theme) */
+.hero-ink {
+  background-image: linear-gradient(90deg, #000000, #666666);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* motion: weighted, decelerating */
+.ease-brand { transition-timing-function: var(--ease-brand); }
+.lp-press { transition: transform 300ms var(--ease-brand), background-color 300ms var(--ease-brand), color 300ms var(--ease-brand), opacity 300ms var(--ease-brand); }
+.lp-press:hover { transform: translateY(-1px); }
+.lp-press:active { transform: scale(0.98); }
+
+/* scroll reveal: rise 32px and fade, once */
+[data-reveal] { opacity: 0; transform: translateY(32px); transition: opacity 700ms var(--ease-brand), transform 700ms var(--ease-brand); }
+[data-reveal].is-in { opacity: 1; transform: none; }
+
+/* tagline reveal: each word goes from muted to full, in reading order */
+.tl-word { opacity: 0.3; transition: opacity 500ms var(--ease-brand); }
+.tl-word.on { opacity: 1; }
+
+/* nav menu toggle: two lines that turn into an X */
+.menu-line { transition: transform 500ms var(--ease-brand); transform-origin: center; }
+[aria-expanded="true"] .menu-line-a { transform: translateY(4px) rotate(45deg); }
+[aria-expanded="true"] .menu-line-b { transform: translateY(-4px) rotate(-45deg); }
+
+/* mobile menu panel + staggered links */
+.menu-panel { opacity: 0; pointer-events: none; transition: opacity 300ms var(--ease-brand); }
+.menu-panel.open { opacity: 1; pointer-events: auto; }
+.menu-link { opacity: 0; transform: translateY(24px); transition: opacity 500ms var(--ease-brand), transform 500ms var(--ease-brand); }
+.menu-panel.open .menu-link { opacity: 1; transform: none; }
+
+/* FAQ chevron */
+details[open] .faq-chev { transform: rotate(45deg); }
+.faq-chev { transition: transform 300ms var(--ease-brand); }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { transform: none; transition: opacity 300ms var(--ease-brand); }
+  .tl-word { opacity: 1; transition: none; }
+  .menu-link { transform: none; }
+  .menu-line, .faq-chev, .lp-press { transition: none; }
+  .lp-press:hover, .lp-press:active { transform: none; }
+}
+
+/* ---------- entrance on every load ---------- */
+@keyframes intro-rise { from { opacity: 0; transform: translateY(32px); } to { opacity: 1; transform: none; } }
+@keyframes intro-drop { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: none; } }
+@keyframes intro-pop { from { opacity: 0; transform: translateY(24px) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes intro-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dot-in { from { transform: scale(0); } to { transform: scale(1); } }
+.intro { animation: intro-rise 800ms var(--ease-brand) both; animation-delay: var(--d, 0ms); }
+.intro-drop { animation: intro-drop 700ms var(--ease-brand) both; animation-delay: var(--d, 0ms); }
+.intro-pop { animation: intro-pop 900ms var(--ease-brand) both; animation-delay: var(--d, 0ms); }
+/* the arrival dot lands once the page has settled */
+.logo-dot-in { transform-box: fill-box; transform-origin: center; animation: dot-in 600ms var(--ease-brand) both; animation-delay: 700ms; }
+
+/* nav: the highlight that glides between items */
+.nav-pill { position: absolute; left: 0; top: 0; border-radius: 8px; background: var(--color-sunken); opacity: 0; transform-origin: left center; pointer-events: none; will-change: transform; }
+
+@media (prefers-reduced-motion: reduce) {
+  .intro, .intro-drop, .intro-pop { animation-name: intro-fade; animation-duration: 300ms; }
+  .logo-dot-in { animation: none; }
 }

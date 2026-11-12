@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode, AnchorHTMLAttributes, InputHTMLAttributes, SelectHTMLAttributes } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { LogoMark } from "./Logo";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "go";
 type Size = "md" | "sm" | "lg";
@@ -96,8 +97,11 @@ export const Select = (p: SelectHTMLAttributes<HTMLSelectElement>) => <select {.
 
 export function Wordmark({ className = "" }: { className?: string }) {
   return (
-    <Link to="/" className={`inline-flex items-baseline text-[20px] font-extrabold tracking-[-0.02em] text-fg ${className}`}>
-      Sampai<span className="text-brand">.</span>
+    <Link to="/" className={`inline-flex items-center gap-2 text-[20px] font-bold tracking-[-0.03em] text-fg ${className}`}>
+      <LogoMark size={24} />
+      <span>
+        Sampai<span className="text-brand">.</span>
+      </span>
     </Link>
   );
 }
