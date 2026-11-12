@@ -189,7 +189,7 @@ export async function handleIncidentEvent(id: string, change: string) {
   return { sent, candidates: users.size };
 }
 
-/** Cheapest option that still makes class with a 5-min margin (bus/shuttle/walk before Grab); else the fastest. */
+/** Cheapest option that still makes class with a 5-min margin (bus/shuttle/walk before a taxi); else the fastest. */
 function pickBest(options: AlertOption[], classStartTs?: number | null) {
   const cost = (o: AlertOption) => (o.type === "grab" ? 3 : o.type === "walk" ? 2 : 1);
   const margin = (o: AlertOption) => (classStartTs ? (classStartTs - Date.now()) / 60000 - o.etaMinutes : 99);
@@ -220,7 +220,7 @@ async function push(user: UserDoc, title: string, body: string, alertId: string)
       data: { title, body, alertId },
       webpush: {
         notification: { title, body, icon: "/icon-192.png", badge: "/icon-192.png", tag: alertId, renotify: true, requireInteraction: true, vibrate: [200, 100, 200, 100, 400] } as any,
-        fcmOptions: { link: `${PUBLIC_WEB_URL}/?alert=${encodeURIComponent(alertId)}` },
+        fcmOptions: { link: `${PUBLIC_WEB_URL}/app?alert=${encodeURIComponent(alertId)}` },
         headers: { Urgency: "high" },
       },
     });

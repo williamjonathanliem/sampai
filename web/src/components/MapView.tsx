@@ -4,12 +4,10 @@ import type { LatLngExpression, LatLngBoundsExpression } from "leaflet";
 import { lines, segmentById, APU } from "../../../shared/network";
 import type { Incident } from "../../../shared/types";
 import type { LiveBus } from "../lib/hooks";
-import walks from "../../../data/walks/bj-covered.geojson?raw";
 
 // Leaflet writes SVG attributes, so these mirror the OKLCH tokens in index.css as hex.
 export const C = { brand: "#5b3fc2", stop: "#c4363b", go: "#2e8a5c", rain: "#2f6cb3", warn: "#d9a521", fg: "#26223a", surface: "#fdfcff", muted: "#7a7690" };
 
-const walkFeatures = JSON.parse(walks).features as { properties: any; geometry: { coordinates: number[][] } }[];
 const ll = (c: number[][]): LatLngExpression[] => c.map(([x, y]) => [y, x]);
 
 export interface Rider {
@@ -34,8 +32,8 @@ interface Props {
   className?: string;
   interactive?: boolean;
   showApuLabel?: boolean;
-  /** a non-rail trip (home → pick-up → campus), drawn dashed */
-  tripPath?: { lat: number; lon: number }[] | null;
+  /** street-accurate path of the student's chosen route */
+  trip?: TripPiece[] | null;
   home?: { lat: number; lon: number } | null;
 }
 
@@ -45,7 +43,7 @@ function Fit({ bounds }: { bounds?: LatLngBoundsExpression | null }) {
   useEffect(() => {
     const apply = () => {
       map.invalidateSize();
-      if (bounds) map.fitBounds(bounds, { padding: [36, 36], maxZoom: 15 });
+      if (bounds) map.fitBounds(bounds, { padding: [36, 36], maxZoom: 16 });
     };
     const t = setTimeout(apply, 60);
     const ro = new ResizeObserver(() => apply());
@@ -58,7 +56,7 @@ function Fit({ bounds }: { bounds?: LatLngBoundsExpression | null }) {
   return null;
 }
 
-export default function MapView({ center = [3.0605, 101.685], zoom = 13, routeSegments = [], incidents = [], buses = [], riders = [], me, walk, showStations = ["PH"], fit, className = "", interactive = true, showApuLabel = true, tripPath, home }: Props) {
+export default function MapView({ center = [3.0605, 101.685], zoom = 13, routeSegments = [], incidents = [], buses = [], riders = [], me, walk, showStations = ["PH"], fit, className = "", interactive = true, showApuLabel = true, trip, home }: Props) {
   const routeSet = useMemo(() => new Set(routeSegments), [routeSegments.join(",")]);
   const routeLines = routeSegments.map((id) => segmentById.get(id)).filter(Boolean);
   const routeStops = new Set(routeLines.flatMap((s) => [s!.fromStop, s!.toStop]));
@@ -81,14 +79,6 @@ export default function MapView({ center = [3.0605, 101.685], zoom = 13, routeSe
         <Polyline key={s!.segmentId} positions={ll(s!.geometry.coordinates)} pathOptions={{ color: C.brand, weight: 6, opacity: 1 }} />
       ))}
 
-      {walk &&
-        walkFeatures
-          .filter((f) => f.properties.walkId === walk)
-          .map((f) => (
-            <Polyline key={f.properties.walkId} positions={ll(f.geometry.coordinates)} pathOptions={{ color: f.properties.covered ? C.rain : C.warn, weight: 5, dashArray: "1 9", lineCap: "round" }}>
-              <Tooltip sticky>{f.properties.covered ? "Covered path (mock)" : "Exposed path (mock)"}</Tooltip>
-            </Polyline>
-          ))}
 
       {lines
         .filter((l) => showStations.includes(l.lineId))
@@ -99,9 +89,7 @@ export default function MapView({ center = [3.0605, 101.685], zoom = 13, routeSe
           </CircleMarker>
         ))}
 
-      {tripPath && tripPath.length > 1 && (
-        <Polyline positions={tripPath.map((p) => [p.lat, p.lon] as [number, number])} pathOptions={{ color: C.brand, weight: 5, dashArray: "2 10", lineCap: "round" }} />
-      )}
+      {trip && <TripPath pieces={trip} highlightWalk={!!walk} />}
       {home && (
         <CircleMarker center={[home.lat, home.lon]} radius={7} pathOptions={{ color: C.surface, weight: 3, fillColor: C.brand, fillOpacity: 1 }}>
           <Tooltip direction="top" offset={[0, -6]}>Home</Tooltip>
@@ -159,4 +147,59 @@ export function boundsForSegments(ids: string[]): LatLngBoundsExpression | null 
     [Math.min(...lats), Math.min(...lons)],
     [Math.max(...lats), Math.max(...lons)],
   ];
+}
+
+export interface TripPiece {
+  mode: string;
+  color?: string;
+  coords: [number, number][]; // [lon, lat]
+}
+
+/** Draws a chosen route the way it is travelled: walks dotted, trains in their line colour, shuttle/Taxi solid. */
+export function TripPath({ pieces, highlightWalk = false }: { pieces: TripPiece[]; highlightWalk?: boolean }) {
+  return (
+    <>
+      {pieces.map((p, i) => {
+        const pos = p.coords.map(([x, y]) => [y, x] as [number, number]);
+        if (pos.length < 2) return null;
+        if (p.mode === "walk")
+          return (
+            <Polyline key={i} positions={pos} pathOptions={{ color: highlightWalk ? C.rain : C.brand, weight: highlightWalk ? 7 : 5, dashArray: "1 10", lineCap: "round", lineJoin: "round" }}>
+              <Tooltip sticky>Walk</Tooltip>
+            </Polyline>
+          );
+        const color = p.mode === "rail" || p.mode === "bus" ? p.color ?? C.brand : p.mode === "grab" ? C.go : C.fg;
+        return [
+          <Polyline key={`${i}-case`} positions={pos} pathOptions={{ color: C.surface, weight: 9, opacity: 1, lineCap: "round", lineJoin: "round" }} />,
+          <Polyline key={i} positions={pos} pathOptions={{ color, weight: 5, opacity: 1, lineCap: "round", lineJoin: "round" }}>
+            <Tooltip sticky>{p.mode === "rail" ? "Train" : p.mode === "shuttle" ? "APU shuttle" : p.mode === "grab" ? "Taxi" : p.mode === "bus" ? "Rapid KL bus" : p.mode}</Tooltip>
+          </Polyline>,
+        ];
+      })}
+    </>
+  );
+}
+
+export function boundsForPieces(pieces: TripPiece[] | null | undefined, extra: { lat: number; lon: number }[] = []): LatLngBoundsExpression | null {
+  const pts = (pieces ?? []).flatMap((p) => p.coords.map(([x, y]) => ({ lat: y, lon: x }))).concat(extra);
+  if (pts.length < 2) return null;
+  const lats = pts.map((p) => p.lat), lons = pts.map((p) => p.lon);
+  return [
+    [Math.min(...lats), Math.min(...lons)],
+    [Math.max(...lats), Math.max(...lons)],
+  ];
+}
+
+export function parseTrip(json?: string | null): TripPiece[] | null {
+  if (!json) return null;
+  try {
+    return JSON.parse(json) as TripPiece[];
+  } catch {
+    return null;
+  }
+}
+
+/** Fits a map to bounds whenever they change (used inside other MapContainers). */
+export function FitTo({ bounds }: { bounds: LatLngBoundsExpression | null }) {
+  return <Fit bounds={bounds} />;
 }

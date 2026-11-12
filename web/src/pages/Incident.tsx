@@ -7,7 +7,7 @@ import { fmtMyt } from "../../../shared/time";
 import type { LatLngBoundsExpression } from "leaflet";
 import { Badge, SimTag, Wordmark } from "../components/ui";
 
-/** Public verification page a lecturer reaches from the QR code on a delay letter. */
+/** Public verification page a lecturer reaches from the QR code on an incident report. */
 export default function IncidentPage() {
   const { id } = useParams();
   const inc = useIncident(id);

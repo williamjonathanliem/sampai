@@ -1,18 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { OctagonAlert, ChevronRight, Thermometer, CloudRain, TriangleAlert, Bell, BellOff, TrainFront, Footprints, Bus, BusFront, Car, CircleCheck, SlidersHorizontal, CalendarClock, X, FileText } from "lucide-react";
-import MapView, { boundsForSegments } from "../components/MapView";
+import { OctagonAlert, ChevronRight, Thermometer, CloudRain, TriangleAlert, Bell, BellOff, TrainFront, Footprints, Bus, BusFront, Car, CircleCheck, SlidersHorizontal, CalendarClock, X, FileText, Umbrella, CloudLightning, GlassWater, Flame, Sun, Wind, ShieldPlus } from "lucide-react";
+import { bringList, type BringKind } from "../../../shared/bring";
+
+const bringIcon: Record<BringKind, typeof Umbrella> = { umbrella: Umbrella, storm: CloudLightning, water: GlassWater, heatwave: Flame, sun: Sun, mask: Wind, "mask-n95": ShieldPlus };
+import MapView, { boundsForSegments, boundsForPieces, parseTrip } from "../components/MapView";
 import AlertSheet, { lateness } from "../components/AlertSheet";
+import RoutePicker from "../components/RoutePicker";
+import type { RouteOption } from "../components/RouteOptions";
 import { Badge, Button, Eyebrow, SimTag, Wordmark, btn } from "../components/ui";
 import { useUid, useUserDoc, useAlerts, useIncidents, useConditions, useNextClass, useNow, useLiveBuses } from "../lib/hooks";
 import { useDesktop } from "../lib/useMedia";
 import { startSession, onSensor, type SensorState } from "../lib/sensors";
 import { enablePush, buzz, localNotify, type PushStatus } from "../lib/push";
 import { api } from "../lib/api";
-import { stationName, lineById, APU } from "../../../shared/network";
-import stopsJson from "../../../data/shuttle_stops.json";
-
-const shuttleStops = stopsJson.stops;
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../lib/firebase";
+import { distance } from "@turf/turf";
+import { stationName, lineById } from "../../../shared/network";
 import { minToHhmm, myt, hhmmToMin } from "../../../shared/time";
 import type { AlertDoc, RouteLeg } from "../../../shared/types";
 
@@ -21,7 +26,8 @@ const legIcon = { walk: Footprints, rail: TrainFront, bus: Bus, shuttle: BusFron
 function legText(l: RouteLeg) {
   if (l.mode === "rail") return { title: `${stationName(l.fromStop)} to ${stationName(l.toStop)}`, sub: lineById.get(l.lineId!)?.name ?? l.lineId };
   if (l.mode === "shuttle") return { title: l.label ?? "APU shuttle", sub: `${stationName(l.from)} to campus` };
-  if (l.mode === "grab") return { title: l.label ?? "Grab to APU", sub: l.from === "home" ? "From home" : `${stationName(l.from)} to campus` };
+  if (l.mode === "bus") return { title: l.label ?? `Bus ${l.routeId}`, sub: "Rapid KL bus to TPM" };
+  if (l.mode === "grab") return { title: l.label ?? "Taxi to APU", sub: l.from === "home" ? "From home" : `${stationName(l.from)} to campus` };
   if (l.from === "home") return { title: `Walk to ${l.to === "APU" ? "APU" : stationName(l.to)}`, sub: "From home" };
   return { title: l.label ?? "Walk", sub: `${stationName(l.from)} to campus` };
 }
@@ -41,6 +47,8 @@ export default function Home() {
   const buses = useLiveBuses();
   const cls = useNextClass(user, now);
   const [sheet, setSheet] = useState<AlertDoc | null>(null);
+  const [picking, setPicking] = useState(false);
+  const [preview, setPreview] = useState<RouteOption | null>(null);
   const [walk, setWalk] = useState<"bj-covered" | "bj-direct" | null>(null);
   const [sensor, setSensor] = useState<SensorState | null>(null);
   const [push, setPush] = useState<PushStatus | null>(null);
@@ -71,7 +79,7 @@ export default function Home() {
 
   useEffect(() => onSensor(setSensor), []);
   useEffect(() => {
-    if (user === null) nav("/welcome", { replace: true });
+    if (user === null) nav("/", { replace: true }); // no profile yet: back to the landing page
   }, [user]);
 
   // new or changed disruption: vibrate, notify, open the sheet.
@@ -133,19 +141,51 @@ export default function Home() {
 
   const latest = alerts.find((a) => a.status === "active") ?? null;
   const resumed = !latest ? alerts.find((a) => a.status === "cleared" && now - a.sentAt < 15 * 60_000) ?? null : null;
-  // non-rail trips (hostel shuttle, walking): show home, the pick-up and campus instead of a rail stretch
-  const tripPath = useMemo(() => {
-    if (!user?.homeLocation || (user.route?.segments?.length ?? 0) > 0) return null;
-    const stop = shuttleStops.find((s) => s.name === legs.find((l) => l.mode === "shuttle")?.from);
-    return [user.homeLocation, ...(stop ? [stop] : []), APU];
-  }, [user?.homeLocation?.lat, user?.homeLocation?.lon, user?.route?.segments?.length, legs.length]);
-  const fit = useMemo(() => {
-    if (tripPath) {
-      const lats = tripPath.map((p) => p.lat), lons = tripPath.map((p) => p.lon);
-      return [[Math.min(...lats) - 0.004, Math.min(...lons) - 0.004], [Math.max(...lats) + 0.004, Math.max(...lons) + 0.004]] as [[number, number], [number, number]];
-    }
-    return boundsForSegments(user?.route?.segments ?? []);
-  }, [user?.route?.segments?.join(","), tripPath]);
+  // the chosen route's street-accurate path (saved with the profile); older profiles fall back to rail segments
+  const savedTrip = useMemo(() => parseTrip(user?.route?.pathJson), [user?.route?.pathJson]);
+  // while changing route, the map shows the option being looked at
+  const trip = preview?.path ?? savedTrip;
+  const fit = useMemo(
+    () => (trip ? boundsForPieces(trip, user?.homeLocation ? [user.homeLocation] : []) : boundsForSegments(user?.route?.segments ?? [])),
+    [user?.route?.pathJson, user?.route?.segments?.join(","), preview?.id],
+  );
+
+  // ---- auto-share: no daily tap. Opted in once; while the app is open in the commute window,
+  //      sharing starts when the phone is near a station on the student's line or moving at train speed.
+  const [autoStarted, setAutoStarted] = useState(false);
+  useEffect(() => {
+    if (!uid || !user?.autoShare || !railLeg || sensor || autoStarted || !navigator.geolocation) return;
+    const line = lineById.get(railLeg.lineId ?? "PH");
+    if (!line) return;
+    let alive = true;
+    const inWindow = () => {
+      const n = Date.now();
+      if (!cls || !leaveTs) return false;
+      return n >= leaveTs - 20 * 60_000 && n <= cls.startTs;
+    };
+    const check = () => {
+      if (!inWindow()) return;
+      navigator.geolocation.getCurrentPosition(
+        (p) => {
+          if (!alive) return;
+          const { latitude, longitude, speed } = p.coords;
+          const atStation = line.stations.some((st) => distance([longitude, latitude], [st.lon, st.lat], { units: "meters" }) <= 400);
+          if (atStation || (speed ?? 0) > 6) {
+            setAutoStarted(true);
+            startSession({ uid, mode: "rail", lineId: railLeg.lineId ?? "PH", destStop: railLeg.toStop }).catch(() => setAutoStarted(false));
+          }
+        },
+        () => null,
+        { enableHighAccuracy: true, timeout: 10_000, maximumAge: 30_000 },
+      );
+    };
+    check();
+    const t = setInterval(check, 60_000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, [uid, user?.autoShare, railLeg?.lineId, !!sensor, autoStarted, leaveTs, cls?.startTs]);
 
   if (!user)
     return (
@@ -158,6 +198,14 @@ export default function Home() {
   const heat = cond?.heat;
   const rain = cond?.rain;
   const metKL = cond?.metWarnings?.filter((w) => w.affectsKL) ?? [];
+  const outdoorMin = legs.filter((l) => l.mode === "walk").reduce((a, l) => a + (l.minutes ?? 0), 0) || null;
+  const bring = bringList({ rainProb: rain?.probNextHour ?? null, metStorm: metKL.length > 0, feels: heat?.apparentTemp ?? null, uv: cond?.uv ?? null, aqi: cond?.air?.aqi ?? null, outdoorMin, at: leaveBy });
+
+
+  async function setAutoShare(on: boolean) {
+    if (!uid) return;
+    await updateDoc(doc(db, "users", uid), { autoShare: on }).catch(() => null);
+  }
 
   async function board() {
     if (!uid) return;
@@ -172,7 +220,7 @@ export default function Home() {
 
   const map = (
     <section aria-label="Map" className={`relative overflow-hidden rounded-2xl border border-line ${desktop ? "h-full" : "h-60"}`}>
-      <MapView tripPath={tripPath} home={tripPath ? user.homeLocation : null} routeSegments={user.route?.segments} incidents={incidents} buses={buses.filter((b) => b.stuck || b.simulated)} walk={walk} fit={fit} me={sensor?.lastFix ?? null} />
+      <MapView trip={trip} home={trip ? user.homeLocation : null} routeSegments={trip ? [] : user.route?.segments} incidents={incidents} buses={buses.filter((b) => b.stuck || b.simulated)} walk={walk} fit={fit} me={sensor?.lastFix ?? null} />
       {walk && (
         <button onClick={() => setWalk(null)} className="press absolute bottom-3 left-3 z-[500] flex h-8 items-center gap-1.5 rounded-full bg-surface px-3 text-xs font-semibold text-rain ring-1 ring-line">
           {walk === "bj-covered" ? "Covered path" : "Walking path"} <X size={14} />
@@ -188,7 +236,7 @@ export default function Home() {
         <span className="relative h-3 w-3 rounded-full bg-rain" />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="text-[14px] font-semibold">Sharing while on board</div>
+        <div className="text-[14px] font-semibold">{autoStarted ? "Started automatically" : "Sharing while on board"}</div>
         <div className="tnum truncate text-xs text-muted">
           {sensor.error ? sensor.error : sensor.lastFix ? `${sensor.pings} pings · ${sensor.speed != null ? sensor.speed.toFixed(1) : "–"} m/s · ±${Math.round(sensor.lastFix.accuracy)} m` : "Waiting for GPS…"}
         </div>
@@ -202,7 +250,13 @@ export default function Home() {
       <Button size="lg" className="w-full" onClick={board} loading={starting} icon={<TrainFront size={19} />}>
         I'm on the train
       </Button>
-      <p className="mt-2 text-center text-[11px] text-muted">Your location is shared anonymously, only while you're on board.</p>
+      <label className="mt-3 flex cursor-pointer items-start gap-2.5 text-[12.5px]">
+        <input type="checkbox" className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-brand)]" checked={!!user.autoShare} onChange={(e) => setAutoShare(e.target.checked)} />
+        <span>
+          <span className="font-semibold">Start automatically on my commute</span>
+          <span className="block text-muted">No daily tap. With Sampai open around {leaveBy ?? "your leave time"}, sharing starts when you reach a station on your line. Anonymous, and only until you get off.</span>
+        </span>
+      </label>
     </>
   );
 
@@ -260,7 +314,7 @@ export default function Home() {
                 <div className="flex items-center gap-3 border-t border-stop/20 px-4 py-3">
                   <span className="flex-1 text-[13px] font-semibold text-stop">You'll be about {lateness(latest).lateBy} min late</span>
                   <Link to={`/letter/${latest.incidentId}`} className={btn("danger", "sm")}>
-                    <FileText size={15} /> Delay notice
+                    <FileText size={15} /> Incident report
                   </Link>
                 </div>
               )}
@@ -335,6 +389,19 @@ export default function Home() {
             )}
           </section>
 
+          {/* a report on demand, even with no alert (late for any reason, or just to keep a record) */}
+          <Link
+            to={`/report${cls ? `?${new URLSearchParams({ class: cls.title, start: cls.start, ...(cls.room ? { room: cls.room } : {}), ...(cls.lecturer ? { lecturer: cls.lecturer } : {}) })}` : ""}`}
+            className="press -mt-3 flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-[13.5px] hover:border-line-strong"
+          >
+            <FileText size={18} className="shrink-0 text-muted" />
+            <span className="min-w-0 flex-1">
+              <span className="font-semibold">Make report</span>
+              <span className="block text-xs text-muted">Late without an alert? Sampai checks the records and writes it up.</span>
+            </span>
+            <ChevronRight size={18} className="shrink-0 text-faint" />
+          </Link>
+
           {desktop && railLeg && <div className="rounded-2xl border border-line bg-surface p-4">{action}</div>}
 
           {showAlertsPrompt && (
@@ -353,6 +420,29 @@ export default function Home() {
 
           {!desktop && map}
 
+          {bring.length > 0 && (
+            <section aria-label="Before you leave" className="rounded-2xl border border-line bg-surface p-4">
+              <Eyebrow>Before you leave · bring</Eyebrow>
+              <ul className="mt-2.5 space-y-2">
+                {bring.map((b) => {
+                  const Icon = bringIcon[b.kind];
+                  const tone = b.tone === "stop" ? "bg-stop-soft text-stop" : b.tone === "rain" ? "bg-rain-soft text-rain" : "bg-warn-soft text-warn";
+                  return (
+                    <li key={b.kind} className="flex items-start gap-3">
+                      <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${tone}`}>
+                        <Icon size={17} aria-hidden />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-[14px] font-semibold leading-snug">{b.item}</span>
+                        <span className="block text-[12.5px] leading-snug text-muted">{b.why}</span>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
+
           <section aria-label="Conditions" className="flex flex-wrap gap-2">
             <Badge tone={heat?.advisory ? "warn" : "neutral"} icon={<Thermometer size={14} />}>
               <span className="tnum">Feels {heat?.apparentTemp != null ? Math.round(heat.apparentTemp) : "–"}°C</span>
@@ -362,6 +452,13 @@ export default function Home() {
             <Badge tone={rain?.advisory ? "rain" : "neutral"} icon={<CloudRain size={14} />}>
               <span className="tnum">Rain {rain?.probNextHour ?? "–"}%</span> next hour{rain?.simulated ? " (sim)" : ""}
             </Badge>
+            {cond?.air?.aqi != null && (
+              <Badge tone={cond.air.advisory ? "warn" : "neutral"} icon={<Wind size={14} />}>
+                <span className="tnum">Air {Math.round(cond.air.aqi)}</span>
+                {cond.air.aqi > 150 ? " · haze" : cond.air.aqi > 100 ? " · hazy" : ""}
+                {cond.air.simulated ? " (sim)" : ""}
+              </Badge>
+            )}
             {metKL.length > 0 && (
               <Badge tone="stop" icon={<TriangleAlert size={14} />}>
                 MET {metKL[0].title.replace(/ Warning$/i, "").toLowerCase()} warning
@@ -372,9 +469,9 @@ export default function Home() {
           <section aria-label="Your route">
             <div className="mb-3 flex items-baseline justify-between">
               <Eyebrow>Your route</Eyebrow>
-              <Link to="/profile" className="text-[13px] font-semibold text-brand">
+              <button onClick={() => setPicking(true)} disabled={!user.homeLocation} className="text-[13px] font-semibold text-brand disabled:text-faint">
                 Change
-              </Link>
+              </button>
             </div>
             <ol>
               {legs.map((l, i) => {
@@ -427,6 +524,7 @@ export default function Home() {
         </div>
       )}
 
+      {picking && uid && <RoutePicker uid={uid} user={user} onPreview={setPreview} onClose={() => setPicking(false)} />}
       {sheet && <AlertSheet alert={sheet} onClose={() => setSheet(null)} onWalk={(id) => setWalk(id as any)} />}
     </div>
   );

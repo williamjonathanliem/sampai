@@ -13,7 +13,7 @@ export const NAV = [
   { id: "problem", label: "The gap" },
   { id: "benefits", label: "What you get" },
   { id: "how", label: "How it works" },
-  { id: "proof", label: "Delay notice" },
+  { id: "proof", label: "Incident report" },
   { id: "faq", label: "FAQ" },
 ];
 
@@ -134,7 +134,7 @@ export function Nav() {
   const onLanding = pathname === "/welcome";
   const uid = useUid();
   const user = useUserDoc(uid);
-  const appHref = user ? "/" : "/onboard";
+  const appHref = user ? "/app" : "/onboard";
   const cta = user ? "Open the app" : "Try the live demo";
   const showCta = onLanding || appHref !== pathname; // never a button to the page you're on
 

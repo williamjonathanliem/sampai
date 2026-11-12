@@ -62,6 +62,9 @@ export interface UserRoute {
   segments: string[];
   busRoutes?: string[];
   lines?: string[];
+  /** street-accurate path of the chosen route, JSON of [{mode, color?, coords:[lon,lat][]}] (Firestore has no nested arrays) */
+  pathJson?: string;
+  title?: string;
 }
 
 export interface ClassSlot {
@@ -85,6 +88,8 @@ export interface UserDoc {
   route?: UserRoute;
   classes?: ClassSlot[];
   profileId?: string;
+  /** opted in once: sharing starts by itself when the app is open near the student's line at commute time */
+  autoShare?: boolean;
   simulated: boolean;
   updatedAt?: number;
 }
@@ -155,5 +160,8 @@ export interface Conditions {
   heat: { apparentTemp: number | null; advisory: boolean; updatedAt: number; simulated?: boolean };
   rain: { probNextHour: number | null; advisory: boolean; updatedAt: number; simulated?: boolean };
   metWarnings: { title: string; text: string; validFrom?: string; validTo?: string; affectsKL: boolean; simulated?: boolean }[];
+  /** air quality (haze): US AQI + PM2.5 from Open-Meteo */
+  air?: { aqi: number | null; pm25: number | null; advisory: boolean; simulated?: boolean };
+  uv?: number | null;
   updatedAt: number;
 }
