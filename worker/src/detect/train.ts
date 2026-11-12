@@ -1,5 +1,5 @@
 /**
- * Train stall detection from riders' phones (section 7.2 of CLAUDE.md).
+ * Train stall detection from riders' phones.
  * Keeps a sliding window in memory, so run the worker as a single instance.
  */
 import { cfg } from "../config";
