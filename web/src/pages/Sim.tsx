@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { along, length, lineString } from "@turf/turf";
 import { Play, Square, OctagonX, CloudRain, Sun, Thermometer, ThermometerSnowflake, Bus, BarChart3, RotateCcw, Smartphone, Wind } from "lucide-react";
@@ -204,14 +204,14 @@ export default function Sim() {
   return (
     <div className="flex h-full flex-col">
       <OpsBar
-        right={
+        badge={
           <span className="inline-flex h-7 items-center rounded-md bg-warn-fill px-2.5 text-xs font-extrabold uppercase tracking-[0.12em] text-fg">Simulated</span>
         }
       />
       <div className="sim-stripes h-1.5 shrink-0" aria-hidden />
 
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        <div className="relative h-[46vh] shrink-0 lg:h-auto lg:flex-1">
+        <div className="intro relative h-[46vh] shrink-0 lg:h-auto lg:flex-1" style={{ "--d": "80ms" } as CSSProperties}>
           <MapView riders={[...mapRiders, ...realOnMap]} incidents={incidents} buses={buses} center={[3.065, 101.67]} zoom={13} />
           <div className="absolute bottom-6 left-3 z-[500] rounded-xl bg-surface px-3.5 py-2.5 text-xs ring-1 ring-line">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
@@ -225,7 +225,7 @@ export default function Sim() {
           </div>
         </div>
 
-        <aside className="w-full shrink-0 overflow-y-auto border-line bg-surface lg:w-[400px] lg:border-l">
+        <aside className="intro-stagger w-full shrink-0 overflow-y-auto border-line bg-surface lg:w-[400px] lg:border-l" style={{ "--d": "160ms" } as CSSProperties}>
           <div className="px-5 pb-1 pt-5">
             <h1 className="text-[18px] font-bold">Simulator</h1>
             <p className="mt-1 text-[13px] leading-relaxed text-muted">Fake riders post to the same <code className="rounded bg-sunken px-1 font-mono text-[12px]">/ping</code> endpoint as real phones, flagged simulated.</p>

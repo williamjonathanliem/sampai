@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { OctagonAlert, ChevronRight, Thermometer, CloudRain, TriangleAlert, Bell, BellOff, TrainFront, Footprints, Bus, BusFront, Car, CircleCheck, SlidersHorizontal, CalendarClock, X, FileText, Umbrella, CloudLightning, GlassWater, Flame, Sun, Wind, ShieldPlus } from "lucide-react";
+import { OctagonAlert, ChevronRight, Thermometer, CloudRain, TriangleAlert, Bell, BellOff, TrainFront, Footprints, Bus, BusFront, Car, CircleCheck, SlidersHorizontal, CalendarClock, X, FileText, Umbrella, CloudLightning, GlassWater, Flame, Sun, Wind, ShieldPlus, UserRound } from "lucide-react";
 import { bringList, type BringKind } from "../../../shared/bring";
 
 const bringIcon: Record<BringKind, typeof Umbrella> = { umbrella: Umbrella, storm: CloudLightning, water: GlassWater, heatwave: Flame, sun: Sun, mask: Wind, "mask-n95": ShieldPlus };
@@ -8,7 +8,7 @@ import MapView, { boundsForSegments, boundsForPieces, parseTrip } from "../compo
 import AlertSheet, { lateness } from "../components/AlertSheet";
 import RoutePicker from "../components/RoutePicker";
 import type { RouteOption } from "../components/RouteOptions";
-import { Badge, Button, Eyebrow, SimTag, Wordmark, btn } from "../components/ui";
+import { Badge, Button, Eyebrow, MobileMenu, SimTag, Wordmark, btn } from "../components/ui";
 import { useUid, useUserDoc, useAlerts, useIncidents, useConditions, useNextClass, useNow, useLiveBuses } from "../lib/hooks";
 import { useDesktop } from "../lib/useMedia";
 import { startSession, onSensor, type SensorState } from "../lib/sensors";
@@ -270,20 +270,34 @@ export default function Home() {
               onClick={async () => uid && setPush(await enablePush(uid, () => null))}
               aria-label="Turn on alerts"
               title={push === "denied" ? "Notifications are blocked in browser settings" : push === "unsupported" ? "On iPhone, add Sampai to the Home Screen first" : "Turn on alerts"}
-              className={btn("ghost", "sm", "w-9 px-0 lg:w-auto lg:px-3")}
+              className={btn("ghost", "sm", "hidden lg:inline-flex lg:w-auto lg:px-3")}
             >
               {push === "denied" || push === "unsupported" ? <BellOff size={18} /> : <Bell size={18} />}
-              <span className="hidden lg:inline">Turn on alerts</span>
+              <span>Turn on alerts</span>
             </button>
           )}
-          <Link to="/sim" aria-label="Demo tools" title="Simulator and dashboard" className={btn("ghost", "sm", "w-9 px-0 lg:w-auto lg:px-3")}>
+          <Link to="/sim" aria-label="Demo tools" title="Simulator and dashboard" className={btn("ghost", "sm", "hidden lg:inline-flex lg:w-auto lg:px-3")}>
             <SlidersHorizontal size={18} />
-            <span className="hidden lg:inline">Simulator &amp; dashboard</span>
+            <span>Simulator &amp; dashboard</span>
           </Link>
           <Link to="/profile" aria-label="Your profile" className="press ml-1 flex h-9 items-center gap-2 rounded-full bg-surface pl-1 pr-3 text-[13px] font-semibold ring-1 ring-line">
             <span className="grid h-7 w-7 place-items-center rounded-full bg-brand-soft text-xs font-bold text-brand">{(user.displayName ?? "S")[0]}</span>
             {user.displayName ?? "Student"}
           </Link>
+          <MobileMenu
+            className="-mr-2 ml-1 lg:hidden"
+            items={[
+              ...(push === "enabled" || push === "local"
+                ? []
+                : push === "denied"
+                  ? [{ label: "Alerts are blocked", hint: "Allow notifications for Sampai in your browser settings", icon: <BellOff size={20} /> }]
+                  : push === "unsupported"
+                    ? [{ label: "Alerts need the Home Screen app", hint: "On iPhone, add Sampai to the Home Screen first", icon: <BellOff size={20} /> }]
+                    : [{ label: "Turn on alerts", icon: <Bell size={20} />, onClick: async () => uid && setPush(await enablePush(uid, () => null)) }]),
+              { label: "Simulator & dashboard", to: "/sim", icon: <SlidersHorizontal size={20} /> },
+              { label: "Your profile", to: "/profile", icon: <UserRound size={20} /> },
+            ]}
+          />
         </div>
       </header>
 
