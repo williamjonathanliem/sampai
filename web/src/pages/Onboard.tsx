@@ -7,7 +7,7 @@ import { useUid } from "../lib/hooks";
 import config from "../../../data/config.json";
 import { routeFromLegs } from "../../../shared/network";
 import type { RouteLeg } from "../../../shared/types";
-import { Badge, Segmented, SimTag, Wordmark } from "../components/ui";
+import { Badge, Segmented, SimTag } from "../components/ui";
 import ProfileForm from "../components/ProfileForm";
 import { LiveNow } from "../components/LiveNow";
 import { Nav } from "../components/SiteNav";
@@ -37,13 +37,10 @@ export default function Onboard() {
   }
 
   return (
-    <div className="mx-auto max-w-md px-5 pb-16 pt-[max(env(safe-area-inset-top),20px)] lg:grid lg:max-w-6xl lg:grid-cols-[1fr_minmax(0,480px)] lg:items-start lg:gap-20 lg:px-10 lg:pt-32">
+    <div className="mx-auto max-w-md px-5 pb-16 pt-[calc(max(1rem,env(safe-area-inset-top))+5.5rem)] lg:grid lg:max-w-6xl lg:grid-cols-[1fr_minmax(0,480px)] lg:items-start lg:gap-20 lg:px-10 lg:pt-32">
       <Nav />
       <div className="lg:sticky lg:top-28">
-        <div className="intro-drop lg:hidden">
-          <Wordmark animated />
-        </div>
-        <h1 style={{ "--d": "120ms" } as CSSProperties} className="intro mt-8 text-[28px] font-bold leading-[1.15] tracking-[-0.02em] lg:mt-8 lg:max-w-[16ch] lg:text-[44px] lg:leading-[1.08]">Get to class, or get proof why you didn't.</h1>
+        <h1 style={{ "--d": "120ms" } as CSSProperties} className="intro mt-2 text-[28px] font-bold leading-[1.15] tracking-[-0.02em] lg:mt-8 lg:max-w-[16ch] lg:text-[44px] lg:leading-[1.08]">Get to class, or get proof why you didn't.</h1>
         <p style={{ "--d": "220ms" } as CSSProperties} className="intro mt-3 max-w-[52ch] text-[15px] leading-relaxed text-muted lg:mt-5 lg:text-[17px]">Pick a demo student or set up your own commute. This is what Sampai can see right now.</p>
         <LiveNow style={{ "--d": "320ms" } as CSSProperties} className="intro mt-10 hidden max-w-[52ch] lg:block" />
       </div>

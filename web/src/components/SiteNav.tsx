@@ -128,7 +128,7 @@ function useNavPill(active: string | null) {
 
 const NO_IDS: string[] = [];
 
-/** Off the landing page the nav is desktop only: phones and tablets keep each page's own header. */
+/** The same floating nav on the landing page, onboarding and the brand kit, with a hamburger menu on phones. */
 export function Nav() {
   const { pathname } = useLocation();
   // the landing page lives at "/" (and still answers at /welcome)
@@ -140,6 +140,8 @@ export function Nav() {
   const showCta = onLanding || appHref !== pathname; // never a button to the page you're on
 
   const [open, setOpen] = useState(false);
+  // leaving the page closes the menu
+  useEffect(() => setOpen(false), [pathname]);
   const active = useActiveSection(onLanding ? NAV_IDS : NO_IDS);
   const { list, pill } = useNavPill(active);
 
@@ -157,7 +159,7 @@ export function Nav() {
 
   return (
     <>
-      <div className={`intro-drop fixed inset-x-0 top-4 z-50 justify-center px-4 ${onLanding ? "flex" : "hidden lg:flex"}`}>
+      <div className="intro-drop fixed inset-x-0 top-[max(1rem,env(safe-area-inset-top))] z-50 flex justify-center px-4">
         <nav aria-label="Main" className="flex w-full max-w-[880px] items-center gap-2 rounded-2xl bg-surface/85 p-2 pl-4 ring-1 ring-line backdrop-blur-md">
           {onLanding ? (
             <button type="button" onClick={() => goTo(null)} aria-label="Sampai, back to top" className="mr-auto rounded-lg">
@@ -189,42 +191,46 @@ export function Nav() {
               {cta}
             </Link>
           )}
-          {onLanding && (
-            <button
-              type="button"
-              aria-expanded={open}
-              aria-controls="mobile-menu"
-              aria-label={open ? "Close menu" : "Open menu"}
-              onClick={() => setOpen((o) => !o)}
-              className="lp-press relative z-[60] flex h-11 w-11 items-center justify-center rounded-xl text-fg hover:bg-sunken md:hidden"
-            >
-              <span className="flex w-4 flex-col gap-1.5" aria-hidden>
-                <span className="menu-line menu-line-a block h-0.5 w-4 rounded-full bg-current" />
-                <span className="menu-line menu-line-b block h-0.5 w-4 rounded-full bg-current" />
-              </span>
-            </button>
-          )}
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls="mobile-menu"
+            aria-label={open ? "Close menu" : "Open menu"}
+            onClick={() => setOpen((o) => !o)}
+            className="lp-press relative z-[60] flex h-11 w-11 items-center justify-center rounded-xl text-fg hover:bg-sunken md:hidden"
+          >
+            <span className="flex w-4 flex-col gap-1.5" aria-hidden>
+              <span className="menu-line menu-line-a block h-0.5 w-4 rounded-full bg-current" />
+              <span className="menu-line menu-line-b block h-0.5 w-4 rounded-full bg-current" />
+            </span>
+          </button>
         </nav>
       </div>
 
-      {onLanding && (
-        <div id="mobile-menu" className={`menu-panel fixed inset-0 z-40 bg-surface/95 backdrop-blur-xl md:hidden ${open ? "open" : ""}`} aria-hidden={!open}>
-          <ul className="flex h-full flex-col justify-center gap-2 px-6">
-            {NAV.map((n, i) => (
-              <li key={n.id} className="menu-link" style={{ transitionDelay: open ? `${i * 60}ms` : "0ms" }}>
+      <div id="mobile-menu" className={`menu-panel fixed inset-0 z-40 bg-surface/95 backdrop-blur-xl md:hidden ${open ? "open" : ""}`} aria-hidden={!open}>
+        <ul className="flex h-full flex-col justify-center gap-2 px-6">
+          {NAV.map((n, i) => (
+            <li key={n.id} className="menu-link" style={{ transitionDelay: open ? `${i * 60}ms` : "0ms" }}>
+              {onLanding ? (
                 <Anchor to={n.id} tabIndex={open ? 0 : -1} onGo={() => setOpen(false)} className={`block rounded-lg py-2 heading-4 ${active === n.id ? "text-brand" : "text-fg"}`}>
                   {n.label}
                 </Anchor>
-              </li>
-            ))}
+              ) : (
+                <Link to={`/#${n.id}`} tabIndex={open ? 0 : -1} className="block rounded-lg py-2 heading-4 text-fg">
+                  {n.label}
+                </Link>
+              )}
+            </li>
+          ))}
+          {showCta && (
             <li className="menu-link mt-6" style={{ transitionDelay: open ? `${NAV.length * 60}ms` : "0ms" }}>
               <Link to={appHref} tabIndex={open ? 0 : -1} className="lp-press inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand px-3 py-2 button-md text-surface">
                 {cta} <ArrowRight size={18} />
               </Link>
             </li>
-          </ul>
-        </div>
-      )}
+          )}
+        </ul>
+      </div>
     </>
   );
 }
