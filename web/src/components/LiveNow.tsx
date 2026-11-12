@@ -18,17 +18,33 @@ function useLive<T>(subscribe: (ok: (data: T, fromCache: boolean) => void, fail:
   const [f, setF] = useState<Feed<T>>({ state: "loading" });
   useEffect(() => {
     let answered = false;
-    const timer = setTimeout(() => !answered && setF({ state: "error" }), FEED_TIMEOUT);
-    const off = subscribe(
-      (data, fromCache) => {
-        if (fromCache) return;
-        answered = true;
-        setF({ state: "ok", data });
-      },
-      () => setF({ state: "error" }),
-    );
+    let cached: { data: T } | null = null;
+    let off: () => void = () => {};
+    let retry: ReturnType<typeof setTimeout> | null = null;
+    // slow server: show the last known answer (cache) rather than an error; only error with nothing at all
+    const timer = setTimeout(() => !answered && setF(cached ? { state: "ok", data: cached.data } : { state: "error" }), FEED_TIMEOUT);
+    const start = () => {
+      off = subscribe(
+        (data, fromCache) => {
+          if (fromCache) {
+            cached = { data };
+            return;
+          }
+          answered = true;
+          setF({ state: "ok", data });
+        },
+        () => {
+          // listener died (network, auth not ready yet): keep what we have, try again shortly
+          if (cached) setF({ state: "ok", data: cached.data });
+          else if (!answered) setF({ state: "error" });
+          retry = setTimeout(() => (off(), start()), 5_000);
+        },
+      );
+    };
+    start();
     return () => {
       clearTimeout(timer);
+      if (retry) clearTimeout(retry);
       off();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -38,13 +54,14 @@ function useLive<T>(subscribe: (ok: (data: T, fromCache: boolean) => void, fail:
 
 const useConditionsFeed = () =>
   useLive<Conditions | null>((ok, fail) =>
-    onSnapshot(doc(db, "conditions", "current"), (s) => ok(s.exists() ? (s.data() as Conditions) : null, s.metadata.fromCache), fail),
+    onSnapshot(doc(db, "conditions", "current"), { includeMetadataChanges: true }, (s) => ok(s.exists() ? (s.data() as Conditions) : null, s.metadata.fromCache), fail),
   );
 
 const useActiveIncidents = () =>
   useLive<Incident[]>((ok, fail) =>
     onSnapshot(
       query(collection(db, "incidents"), where("status", "==", "active")),
+      { includeMetadataChanges: true }, // always hear back once the server confirms, even when nothing changed
       (s) => ok(s.docs.map((d) => parseIncident({ ...d.data(), id: d.id })).sort((a, b) => b.startedAt - a.startedAt), s.metadata.fromCache),
       fail,
     ),
