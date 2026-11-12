@@ -119,7 +119,7 @@ export function OpsBar({ right }: { right?: ReactNode }) {
       <nav className="flex gap-1">
         {link("/sim", "Simulator")}
         {link("/admin", "Dashboard")}
-        {link("/", "Student app")}
+        {link("/app", "Student app")}
       </nav>
       <div className="ml-auto flex items-center gap-2">{right}</div>
     </header>

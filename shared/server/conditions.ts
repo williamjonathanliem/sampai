@@ -8,11 +8,15 @@ export interface RealConditions {
   apparentTemp: number | null;
   rainProbNextHour: number | null;
   metWarnings: Conditions["metWarnings"];
+  aqi?: number | null;
+  pm25?: number | null;
+  uv?: number | null;
   fetchedAt: number;
 }
 export interface SimConditions {
   rain?: boolean;
   heat?: number | null;
+  haze?: boolean;
   setAt?: number;
 }
 
@@ -35,6 +39,12 @@ export function merge(real: RealConditions | null, sim: SimConditions | null): C
     heat: { apparentTemp: apparent, advisory: apparent != null && apparent >= HEAT_THRESHOLD, updatedAt: now, simulated: simHeat != null },
     rain: { probNextHour: prob, advisory: (prob ?? 0) >= RAIN_THRESHOLD || warnings.some((w) => w.affectsKL), updatedAt: now, simulated: simRain },
     metWarnings: warnings,
+    // simulated haze: AQI 165 is "unhealthy" (a bad transboundary haze day in the Klang Valley)
+    air: (() => {
+      const aqi = sim?.haze ? 165 : real?.aqi ?? null;
+      return { aqi, pm25: sim?.haze ? 82 : real?.pm25 ?? null, advisory: aqi != null && aqi > 100, simulated: !!sim?.haze };
+    })(),
+    uv: real?.uv ?? null,
     updatedAt: now,
   };
 }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { along, length, lineString } from "@turf/turf";
-import { Play, Square, OctagonX, CloudRain, Sun, Thermometer, ThermometerSnowflake, Bus, BarChart3, RotateCcw, Smartphone } from "lucide-react";
+import { Play, Square, OctagonX, CloudRain, Sun, Thermometer, ThermometerSnowflake, Bus, BarChart3, RotateCcw, Smartphone, Wind } from "lucide-react";
 import MapView, { C, type Rider } from "../components/MapView";
 import { useIncidents, useLiveBuses, useConditions, useLiveRiders } from "../lib/hooks";
 import QRCode from "qrcode";
@@ -329,6 +329,12 @@ export default function Sim() {
               </Button>
               <Button variant="secondary" loading={busy === "heat"} onClick={() => act("heat", "Heatwave 37°C (simulated)", "/sim/conditions", { heat: 37 })} icon={<Thermometer size={16} className="text-warn" />}>
                 Heatwave 37°C
+              </Button>
+              <Button variant="secondary" loading={busy === "haze"} onClick={() => act("haze", "Haze, air quality 165 (simulated)", "/sim/conditions", { haze: true })} icon={<Wind size={16} className="text-warn" />}>
+                Haze
+              </Button>
+              <Button variant="secondary" loading={busy === "clean"} onClick={() => act("clean", "Air quality back to live data", "/sim/conditions", { haze: false })} icon={<Wind size={16} />}>
+                Clear haze
               </Button>
               <Button variant="secondary" loading={busy === "live"} onClick={() => act("live", "Temperature back to live data", "/sim/conditions", { heat: null })} icon={<ThermometerSnowflake size={16} />}>
                 Live temp

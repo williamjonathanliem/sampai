@@ -20,6 +20,7 @@ import {
 import { Logo } from "../components/Logo";
 import { Anchor, Nav, NAV_IDS, goTo } from "../components/SiteNav";
 import { HeroMap } from "../components/HeroMap";
+import SideFlow from "../components/SideFlow";
 import { useUid, useUserDoc } from "../lib/hooks";
 
 /* ------------------------------------------------------------------ data */
@@ -40,9 +41,9 @@ const faqs: { q: string; a: string }[] = [
   { q: "Does it track my location all day?", a: "No. Your phone only shares location after you tap “I'm on the train”, and it stops when you reach your station or after 90 minutes. Raw locations are never stored." },
   { q: "Can one person fake a breakdown?", a: "No. An incident needs several riders stopped on the same stretch at the same time, three in normal use. One phone alone never triggers an alert." },
   { q: "What if I'm the only Sampai rider on my train?", a: "You still get alerts raised by other riders, by Rapid KL live bus GPS and by MET Malaysia warnings. The more riders on board, the faster and more confident detection gets." },
-  { q: "Will my lecturer accept the notice?", a: "That is your lecturer's call, not ours. The notice gives them facts they can check: a reference number, the time window, how many riders detected it, and a QR code to the public incident record." },
+  { q: "Will my lecturer accept the report?", a: "That is your lecturer's call, not ours. The report gives them facts they can check: what happened, when, according to which source (Sampai riders, Rapid KL bus GPS, MET Malaysia), when you left and arrived, and a QR code to the public incident record." },
   { q: "Which lines does it cover?", a: "All 8 rail lines in the Prasarana network data, 179 station to station stretches. Alerts and reroutes are tuned for the Sri Petaling line to Bukit Jalil and APU." },
-  { q: "What does Gemini do?", a: "It writes the alert in plain English or Bahasa Melayu, picks the best option for your class time, rain and heat, and drafts the notice using only facts from the incident log. Without Gemini, Sampai falls back to templates." },
+  { q: "What does Gemini do?", a: "It writes the alert in plain English or Bahasa Melayu, picks the best option for your class time, rain and heat, and writes the incident report in the third person using only facts from the records. Without Gemini, Sampai falls back to templates." },
   { q: "What is simulated in the demo?", a: "Riders and stalls started from the simulator are labelled SIMULATED on screen and in the data. Timetables, shuttle times, bus GPS and weather are live." },
 ];
 
@@ -165,12 +166,16 @@ function SampleNotice() {
       .catch(() => setQrError(true));
   }, []);
 
-  const facts: [string, string][] = [
-    ["Line", "LRT Sri Petaling line"],
-    ["Between", "Sri Petaling and Bukit Jalil"],
-    ["Time window", "08:21 to 08:47 MYT, 26 min"],
-    ["Detected by", "3 rider devices, medium confidence"],
-    ["Alternative taken", "Bus T580 from Awan Besar"],
+  const findings: [string, string][] = [
+    ["The Sri Petaling line was halted between Sri Petaling and Bukit Jalil, 08:21 to 08:47 (26 min).", "3 independent Sampai rider devices"],
+    ["MET Malaysia issued a thunderstorm and heavy rain warning for Kuala Lumpur, in force from 07:45.", "MET Malaysia via data.gov.my"],
+    ["Rapid KL buses near Bukit Jalil were stationary from 08:30, indicating road congestion.", "Rapid KL live bus GPS"],
+  ];
+  const journey: [string, string][] = [
+    ["Boarded", "08:02 at Awan Besar"],
+    ["Alerted", "08:22"],
+    ["Alternative", "Rapid KL bus from Awan Besar"],
+    ["Arrived", "08:58, class at 08:30"],
   ];
 
   return (
@@ -180,19 +185,31 @@ function SampleNotice() {
         <Logo size={22} />
         <span className="caption-5 text-muted tnum">Ref. No. SMP/20261113/7QX2K</span>
       </div>
-      <p className="mt-6 caption-3 uppercase tracking-wider text-muted">Public transport disruption notice</p>
-      <h3 className="mt-2 title-2 text-fg">Notice of public transport disruption affecting attendance: Cloud Infrastructure and Services</h3>
-      <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-xl bg-sunken p-4">
-        {facts.map(([k, v]) => (
+      <p className="mt-6 caption-3 uppercase tracking-wider text-muted">Incident report</p>
+      <h3 className="mt-2 title-2 text-fg">Rail service disruption affecting travel to class: Cloud Infrastructure and Services</h3>
+      <p className="mt-4 body-6 text-fg/85">
+        On 13 November 2026, Aina Rahman (TP071234) was travelling to Cloud Infrastructure and Services at 08:30. The journey was disrupted by the events below, and the student arrived 28 minutes after the class started.
+      </p>
+      <p className="mt-5 caption-3 uppercase tracking-wider text-muted">Findings</p>
+      <ol className="mt-2 space-y-2.5">
+        {findings.map(([t, src], i) => (
+          <li key={i} className="grid grid-cols-[1.25rem_1fr] caption-1 text-fg">
+            <span className="tnum text-muted">{i + 1}.</span>
+            <span>
+              {t}
+              <span className="mt-0.5 block caption-5 italic text-muted">Source: {src}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+      <dl className="mt-5 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 rounded-xl bg-sunken p-4">
+        {journey.map(([k, v]) => (
           <div key={k} className="contents">
             <dt className="caption-4 text-muted">{k}</dt>
-            <dd className="caption-1 text-fg">{v}</dd>
+            <dd className="caption-1 text-fg tnum">{v}</dd>
           </div>
         ))}
       </dl>
-      <p className="mt-6 body-6 text-fg/85">
-        Dear Dr. Lim, on 13 November 2026 the LRT service I was travelling on stopped between Sri Petaling and Bukit Jalil. The disruption is logged under the reference above, and I took the T580 bus to reach campus.
-      </p>
       <figcaption className="mt-6 flex items-center gap-4 rounded-xl p-0">
         {qr ? (
           <img src={qr} alt="QR code linking to the sample incident record" className="h-16 w-16 rounded-sm" width={64} height={64} />
@@ -201,7 +218,7 @@ function SampleNotice() {
         ) : (
           <span className="h-16 w-16 animate-pulse rounded-sm bg-sunken" />
         )}
-        <span className="caption-5 text-muted">Scan to open the public incident record. Generated by Sampai from rider sensor data and public transport feeds. This is not an operator statement.</span>
+        <span className="caption-5 text-muted">Scan to open the public incident record. Prepared by Sampai from the records cited. Written in the third person; every finding names its source.</span>
       </figcaption>
     </figure>
   );
@@ -212,7 +229,7 @@ function SampleNotice() {
 export default function Landing() {
   const uid = useUid();
   const user = useUserDoc(uid);
-  const appHref = user ? "/" : "/onboard";
+  const appHref = user ? "/app" : "/onboard";
   const root = useRef<HTMLDivElement>(null);
   useReveal(root);
 
@@ -238,6 +255,7 @@ export default function Landing() {
       <a href="#main" className="sr-only z-[70] rounded-lg bg-fg px-3 py-2 button-sm text-surface focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
         Skip to content
       </a>
+      <SideFlow />
       <Nav />
 
       <main id="main">
@@ -250,7 +268,7 @@ export default function Landing() {
                 <span className="intro hero-ink block w-fit sm:whitespace-nowrap" style={{ "--d": "220ms" } as CSSProperties}>You'll still get to class</span>
               </h1>
               <p className="intro mt-6 max-w-[680px] body-3 text-muted lg:title-2 lg:font-normal" style={{ "--d": "320ms" } as CSSProperties}>
-                Sampai turns APU students' phones into a live sensor for the LRT. It spots a stalled train, buzzes you with the fastest way to campus, and writes the notice for your lecturer if you're late anyway.
+                Sampai turns APU students' phones into a live sensor for the LRT. It spots a stalled train, buzzes you with the fastest way to campus, and writes an incident report for your lecturer if you're late anyway.
               </p>
               <div className="intro mt-8 flex flex-col items-start gap-4" style={{ "--d": "420ms" } as CSSProperties}>
                 <Link to="/onboard" className="lp-press inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand px-3 py-2 button-md text-surface hover:bg-brand-hover">
@@ -326,20 +344,20 @@ export default function Landing() {
             <Card className="lg:col-span-2">
               <CardTitle
                 icon={<CloudRain size={20} />}
-                title="Walks that respect the weather"
-                body="A MET Malaysia heavy rain warning moves you to the covered path. When it feels like 35°C or more, you get the shaded route."
+                title="Knows what to bring"
+                body="Rain, a MET storm warning, a heatwave or haze: each route says bring an umbrella, water or a mask, weighted by your minutes outdoors."
               />
             </Card>
             <Card className="lg:col-span-4">
               <CardTitle
                 icon={<Path size={20} />}
                 title="A plan that still gets you there"
-                body="Every option shows when you'd arrive and whether you make class. Gemini picks the best one and tells you why in one sentence."
+                body="Trains, the APU shuttle, every Rapid KL bus that runs near you, or a taxi. Each shows when you'd arrive and whether you make class, and Sampai picks the best one."
               />
               <ul className="mt-auto space-y-2 pt-6">
                 {[
-                  { icon: <Bus size={16} />, l: "Bus T580 from Awan Besar", t: "08:52", ok: true },
-                  { icon: <Car size={16} />, l: "Grab from Sri Petaling · RM 13 estimate", t: "08:44", ok: true },
+                  { icon: <Bus size={16} />, l: "Rapid KL bus from Awan Besar · RM 1", t: "08:52", ok: true },
+                  { icon: <Car size={16} />, l: "Taxi from Sri Petaling · RM 13 estimate", t: "08:44", ok: true },
                   { icon: <PersonSimpleWalk size={16} />, l: "Walk via covered path", t: "09:04", ok: false },
                 ].map((o) => (
                   <li key={o.l} className="flex items-center gap-3 rounded-xl bg-sunken px-4 py-2">
@@ -388,7 +406,7 @@ export default function Landing() {
               {[
                 { icon: <DeviceMobile size={20} />, t: "Sense", b: "Riders tap “I'm on the train”. Their phone sends GPS and motion every few seconds, only for that trip, only while on board." },
                 { icon: <Cpu size={20} />, t: "Detect", b: "Pings travel through Pub/Sub to a Cloud Run worker that keeps a sliding window for each stretch of track. Three riders still for two minutes between stations means a stall." },
-                { icon: <BellRinging size={20} />, t: "Alert and prove", b: "Students on that route with a class soon get a push and a vibration. Gemini writes the alert and the delay notice. Every incident lands in BigQuery for the dashboard." },
+                { icon: <BellRinging size={20} />, t: "Alert and prove", b: "Students on that route with a class soon get a push and a vibration. Gemini writes the alert and the incident report. Every incident lands in BigQuery for the dashboard." },
               ].map((s, i) => (
                 <li key={s.t} className="flex gap-4 rounded-3xl bg-bg p-6 ring-1 ring-line">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand text-surface">{s.icon}</span>
@@ -405,17 +423,18 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* ---------- delay notice ---------- */}
+        {/* ---------- incident report ---------- */}
         <section id="proof" aria-labelledby="proof-title" className={`${wrap} scroll-mt-24 py-16 lg:py-24`}>
           <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-16">
             <div data-reveal>
               <SectionHead
                 title={<span id="proof-title">A delay you can prove is a delay you can explain</span>}
-                body="Late anyway? One tap turns the incident record into a formal notice addressed to the lecturer on your timetable. Gemini writes it from the incident log and is told to use only those facts."
+                body="Late anyway? One tap turns the records into a third-person incident report for the lecturer on your timetable: what happened, according to whom, and how it made you late."
               />
               <ul className="mt-8 space-y-4">
                 {[
-                  ["Facts from the log", "Reference number, time window and rider count, straight from the incident record."],
+                  ["Every finding has a source", "Stalled trains from Sampai riders, jams from Rapid KL bus GPS, storms and floods from MET Malaysia."],
+                  ["Your journey, timed", "When you boarded, when you were alerted, what you took instead and how late you were."],
                   ["Checkable in seconds", "A QR code opens the public incident page, so your lecturer can see it for themselves."],
                   ["Your language", "English or Bahasa Melayu, downloaded as a PDF."],
                 ].map(([t, b]) => (

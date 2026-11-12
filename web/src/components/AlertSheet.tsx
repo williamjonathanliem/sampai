@@ -112,12 +112,12 @@ export default function AlertSheet({ alert, onClose, onWalk }: { alert: AlertDoc
                 <div className="min-w-0 flex-1">
                   <div className="font-bold text-stop">You'll be about {lateBy} min late</div>
                   <p className="mt-0.5 text-[13px] leading-snug text-fg/80">
-                    Every option arrives after {alert.classTitle ? `${alert.classTitle} starts` : "class starts"}{alert.classStart ? ` at ${alert.classStart}` : ""}. Send your lecturer an official notice backed by this incident record.
+                    Every option arrives after {alert.classTitle ? `${alert.classTitle} starts` : "class starts"}{alert.classStart ? ` at ${alert.classStart}` : ""}. Send your lecturer an incident report backed by this record.
                   </p>
                 </div>
               </div>
               <Button variant="danger" className="mt-3 w-full" onClick={() => nav(`/letter/${alert.incidentId}`)} icon={<FileText size={17} />}>
-                Get delay notice
+                Get incident report
               </Button>
             </div>
           )}
@@ -143,7 +143,7 @@ export default function AlertSheet({ alert, onClose, onWalk }: { alert: AlertDoc
         {!late && (
           <div className="border-t border-line px-5 pb-[max(env(safe-area-inset-bottom),16px)] pt-3">
             <Button variant="secondary" size="lg" className="w-full" onClick={() => nav(`/letter/${alert.incidentId}`)} icon={<FileText size={18} />}>
-              {cleared ? "Get delay notice for this disruption" : "Running late anyway? Get delay notice"}
+              {cleared ? "Get incident report for this disruption" : "Running late anyway? Get incident report"}
             </Button>
           </div>
         )}
