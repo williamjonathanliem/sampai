@@ -11,7 +11,7 @@
     {
       "id": "grab-awan-besar",
       "type": "grab",
-      "label": "Grab from Awan Besar LRT",
+      "label": "Taxi from Awan Besar LRT",
       "from": {
         "lat": 3.062131,
         "lon": 101.670555
@@ -37,7 +37,7 @@
     {
       "id": "grab-sri-petaling",
       "type": "grab",
-      "label": "Grab from Sri Petaling LRT",
+      "label": "Taxi from Sri Petaling LRT",
       "from": {
         "lat": 3.061445,
         "lon": 101.687074
@@ -56,7 +56,7 @@
     {
       "id": "grab-sungai-besi",
       "type": "grab",
-      "label": "Grab from Sungai Besi LRT",
+      "label": "Taxi from Sungai Besi LRT",
       "from": {
         "lat": 3.063842,
         "lon": 101.708062
@@ -87,7 +87,7 @@
     {
       "id": "grab-muhibbah",
       "type": "grab",
-      "label": "Grab from Muhibbah LRT",
+      "label": "Taxi from Muhibbah LRT",
       "from": {
         "lat": 3.062229,
         "lon": 101.662552
@@ -106,7 +106,7 @@
     {
       "id": "grab-nearest",
       "type": "grab",
-      "label": "Grab from the nearest station",
+      "label": "Taxi from the nearest station",
       "extraMinutes": 10
     },
     {
@@ -141,7 +141,7 @@
     {
       "id": "grab-bukit-jalil",
       "type": "grab",
-      "label": "Grab from Bukit Jalil LRT",
+      "label": "Taxi from Bukit Jalil LRT",
       "from": {
         "lat": 3.058196,
         "lon": 101.692125

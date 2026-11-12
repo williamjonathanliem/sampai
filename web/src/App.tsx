@@ -1,5 +1,6 @@
 import { Component, type ReactNode } from "react";
 import { Routes, Route } from "react-router-dom";
+import { resetSession } from "./lib/firebase";
 import Home from "./pages/Home";
 import Onboard from "./pages/Onboard";
 import Sim from "./pages/Sim";
@@ -10,6 +11,7 @@ import Profile from "./pages/Profile";
 import Landing from "./pages/Landing";
 import Ride from "./pages/Ride";
 import Brand from "./pages/Brand";
+import ReturnBar from "./components/ReturnBar";
 import { Link } from "react-router-dom";
 import { Logo } from "./components/Logo";
 
@@ -24,7 +26,7 @@ function NotFound() {
         <Link to="/welcome" className="lp-press inline-flex min-h-11 items-center rounded-xl bg-brand px-3 py-2 button-md text-surface hover:bg-brand-hover">
           Back to Sampai
         </Link>
-        <Link to="/" className="lp-press inline-flex min-h-11 items-center rounded-xl px-3 py-2 button-md text-fg ring-1 ring-line hover:bg-sunken">
+        <Link to="/app" className="lp-press inline-flex min-h-11 items-center rounded-xl px-3 py-2 button-md text-fg ring-1 ring-line hover:bg-sunken">
           Open the app
         </Link>
       </div>
@@ -56,18 +58,26 @@ class Boundary extends Component<{ children: ReactNode }, { error: Error | null 
   }
 }
 
+// "?reset=1" on any page starts over as a brand-new student (handy for demos and testing)
+if (typeof location !== "undefined" && new URLSearchParams(location.search).has("reset")) {
+  resetSession().finally(() => location.replace("/"));
+}
+
 export default function App() {
   return (
     <Boundary>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/welcome" element={<Landing />} />
+        {/* "/" is always the landing page; the student dashboard lives at /app */}
+        <Route path="/" element={<><Landing /><ReturnBar /></>} />
+        <Route path="/welcome" element={<><Landing /><ReturnBar /></>} />
+        <Route path="/app" element={<Home />} />
         <Route path="/ride" element={<Ride />} />
         <Route path="/onboard" element={<Onboard />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/sim" element={<Sim />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/letter/:incidentId" element={<Letter />} />
+        <Route path="/report" element={<Letter />} />
         <Route path="/incident/:id" element={<IncidentPage />} />
         <Route path="/brand" element={<Brand />} />
         <Route path="*" element={<NotFound />} />

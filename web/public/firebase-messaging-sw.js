@@ -22,7 +22,7 @@ messaging.onBackgroundMessage((payload) => {
     badge: "/icon-192.png",
     vibrate: [200, 100, 200, 100, 400],
     requireInteraction: true,
-    data: { url: "/?alert=" + encodeURIComponent(d.alertId || "") },
+    data: { url: "/app?alert=" + encodeURIComponent(d.alertId || "") },
   });
 });
 

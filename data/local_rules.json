@@ -1,0 +1,26 @@
+{
+  "_about": "Local knowledge that maps and routers get wrong. places: pin corrections for the geocoder. barriers: homes whose trips must leave by a set exit (fences, gated paths). Checked by APU students.",
+  "places": [
+    {
+      "match": ["parkhill"],
+      "label": "Parkhill Residence",
+      "sub": "Bukit Jalil, Kuala Lumpur, 57000",
+      "lat": 3.05494,
+      "lon": 101.69578,
+      "source": "Google Maps pin, checked 12 Nov 2026 (OpenStreetMap had it 130 m north)"
+    }
+  ],
+  "barriers": [
+    {
+      "id": "parkhill-fence",
+      "name": "Parkhill Residence",
+      "lat": 3.05494,
+      "lon": 101.69578,
+      "radiusM": 300,
+      "exitVia": "SP17",
+      "exitLabel": "LRT Bukit Jalil",
+      "noShuttleStops": ["Parkhill"],
+      "note": "A fence blocks Parkhill from Jalan Teknologi on foot, so walking routes leave via LRT Bukit Jalil"
+    }
+  ]
+}

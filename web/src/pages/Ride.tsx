@@ -50,7 +50,7 @@ export default function Ride() {
   if (!s) {
     return (
       <div className="mx-auto max-w-md px-5 pb-16 pt-[max(env(safe-area-inset-top),14px)]">
-        <button onClick={() => nav("/")} className={btn("ghost", "sm", "-ml-2")}>
+        <button onClick={() => nav("/app")} className={btn("ghost", "sm", "-ml-2")}>
           <ArrowLeft size={17} /> Back
         </button>
         <h1 className="mt-4 text-[26px] font-bold tracking-[-0.02em]">On the train</h1>
@@ -110,7 +110,7 @@ export default function Ride() {
   return (
     <div className="mx-auto flex min-h-full max-w-md flex-col px-5 pb-8 pt-[max(env(safe-area-inset-top),14px)]">
       <div className="flex items-center justify-between">
-        <Link to="/" className={btn("ghost", "sm", "-ml-2")}>
+        <Link to="/app" className={btn("ghost", "sm", "-ml-2")}>
           <ArrowLeft size={17} /> Home
         </Link>
         <Badge tone="rain" icon={<span className="relative mr-0.5 flex h-2 w-2"><span className="absolute inset-0 animate-ping rounded-full bg-rain/60" /><span className="relative h-2 w-2 rounded-full bg-rain" /></span>}>
@@ -164,7 +164,7 @@ export default function Ride() {
           </Button>
         )}
         <p className="text-center text-[12px] text-muted">Tap if the train is stuck between stations. Two riders reporting confirms a stall in about 10 seconds.</p>
-        <Button variant="secondary" size="lg" className="w-full" onClick={() => stopSession().then(() => nav("/"))}>
+        <Button variant="secondary" size="lg" className="w-full" onClick={() => stopSession().then(() => nav("/app"))}>
           I'm off the train
         </Button>
       </div>
