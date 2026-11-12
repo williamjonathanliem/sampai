@@ -1,0 +1,60 @@
+# Render blueprint: api + worker on Render's free plan (Firebase stays on the free Spark plan).
+# Render dashboard > New > Blueprint > pick this repo. Then fill the env vars marked sync: false.
+# Full steps: docs/render-handoff.md
+services:
+  - type: web
+    name: sampai-api
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm ci && npm run build -w api
+    startCommand: npm start -w api
+    healthCheckPath: /net
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: GCP_PROJECT
+        value: sampai-437f3
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        value: /etc/secrets/firebase-sa.json # upload as a Secret File named firebase-sa.json
+      - key: USE_PUBSUB
+        value: "false" # no Pub/Sub on Spark: the api posts straight to the worker
+      - key: USE_BIGQUERY
+        value: "false"
+      - key: DEMO_MODE
+        value: "true"
+      - key: WORKER_URL
+        sync: false # https://sampai-worker.onrender.com
+      - key: PUBLIC_WEB_URL
+        sync: false # the Cloudflare site URL
+      - key: GEMINI_API_KEY
+        sync: false
+
+  - type: web
+    name: sampai-worker
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm ci && npm run build -w worker
+    startCommand: npm start -w worker
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: GCP_PROJECT
+        value: sampai-437f3
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        value: /etc/secrets/firebase-sa.json
+      - key: USE_PUBSUB
+        value: "false"
+      - key: USE_BIGQUERY
+        value: "false"
+      - key: DEMO_MODE
+        value: "true"
+      - key: BUS_POLL
+        value: "true"
+      - key: WEATHER_POLL
+        value: "true"
+      - key: PUBLIC_WEB_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false

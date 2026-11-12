@@ -73,7 +73,9 @@ Copy each `.env.example` to `.env` (or `.env.production` for the web build) and 
 - `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID`, `VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_VAPID_KEY`
 - `VITE_API_URL`: the deployed api's URL
 
-**api and worker: Cloud Run** (needs the Firebase project on the Blaze plan). Each has a `Dockerfile`. Set `GCP_PROJECT`, `REGION`, `GEMINI_API_KEY`, `PUBLIC_WEB_URL` (the web app's URL) and, for the api, `WORKER_URL`.
+**api and worker: Render (free).** `render.yaml` defines both services; step-by-step in [docs/render-handoff.md](docs/render-handoff.md). Firebase stays on the free Spark plan.
+
+**Alternative: Cloud Run** (needs the Firebase project on the Blaze plan). Each has a `Dockerfile`. Set `GCP_PROJECT`, `REGION`, `GEMINI_API_KEY`, `PUBLIC_WEB_URL` (the web app's URL) and, for the api, `WORKER_URL`.
 
 ## Data sources
 
