@@ -50,6 +50,8 @@ services:
         value: "false"
       - key: DEMO_MODE
         value: "true"
+      - key: WORKER_URL
+        value: http://localhost:10000 # the worker posts incidents to itself; Render's default port
       - key: BUS_POLL
         value: "true"
       - key: WEATHER_POLL

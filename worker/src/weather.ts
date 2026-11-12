@@ -55,14 +55,45 @@ async function airQuality(): Promise<{ aqi: number | null; pm25: number | null }
 async function openMeteo(): Promise<{ apparentTemp: number | null; rainProbNextHour: number | null; uv: number | null }> {
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${APU.lat}&longitude=${APU.lon}&hourly=apparent_temperature,precipitation_probability&current=temperature_2m,apparent_temperature,precipitation,uv_index&timezone=Asia/Kuala_Lumpur&forecast_days=2`;
-    const j: any = await (await fetch(url, { signal: AbortSignal.timeout(10_000) })).json();
+    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    const j: any = await res.json();
+    // shared hosting IPs hit Open-Meteo's free limits: it answers with {error, reason} and no data
+    if (!res.ok || j.error || !j.current) throw new Error(`HTTP ${res.status} ${j.reason ?? "no current data"}`);
     const nowIso = j.current?.time as string; // local time "2026-11-12T16:30"
     const hours: string[] = j.hourly?.time ?? [];
     const idx = Math.max(0, hours.findIndex((h) => h > nowIso) - 1);
     const probs: number[] = (j.hourly?.precipitation_probability ?? []).slice(idx, idx + 2);
     return { apparentTemp: j.current?.apparent_temperature ?? null, rainProbNextHour: probs.length ? Math.max(...probs) : null, uv: j.current?.uv_index ?? null };
   } catch (e: any) {
-    console.warn(`[weather] open-meteo failed: ${e.message}`);
+    console.warn(`[weather] open-meteo failed: ${e.message}; trying met.no`);
+    return metNo();
+  }
+}
+
+/** Fallback forecast: MET Norway (free, no key, needs a User-Agent). Apparent temperature via the NOAA heat index. */
+async function metNo(): Promise<{ apparentTemp: number | null; rainProbNextHour: number | null; uv: number | null }> {
+  try {
+    const url = `https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${APU.lat.toFixed(4)}&lon=${APU.lon.toFixed(4)}`;
+    const res = await fetch(url, { headers: { "User-Agent": "Sampai/0.1 (student commute prototype)" }, signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const j: any = await res.json();
+    const now = j.properties?.timeseries?.[0]?.data;
+    const d = now?.instant?.details ?? {};
+    const t: number | undefined = d.air_temperature;
+    const rh: number | undefined = d.relative_humidity;
+    let feels: number | null = t ?? null;
+    if (t != null && rh != null && t >= 27) {
+      const f = (t * 9) / 5 + 32;
+      const hi = -42.379 + 2.04901523 * f + 10.14333127 * rh - 0.22475541 * f * rh - 0.00683783 * f * f - 0.05481717 * rh * rh + 0.00122874 * f * f * rh + 0.00085282 * f * rh * rh - 0.00000199 * f * f * rh * rh;
+      feels = Math.round((((hi - 32) * 5) / 9) * 10) / 10;
+    }
+    const nh = now?.next_1_hours?.details ?? {};
+    // probability isn't published for every location; estimate it from the expected amount
+    const amt: number | undefined = nh.precipitation_amount;
+    const rain = nh.probability_of_precipitation ?? (amt == null ? null : amt >= 1 ? 80 : amt >= 0.3 ? 60 : amt > 0 ? 35 : 10);
+    return { apparentTemp: feels, rainProbNextHour: rain, uv: d.ultraviolet_index_clear_sky ?? null };
+  } catch (e: any) {
+    console.warn(`[weather] met.no failed: ${e.message}`);
     return { apparentTemp: null, rainProbNextHour: null, uv: null };
   }
 }
