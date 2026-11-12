@@ -4,6 +4,7 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
+    "site": "sampai-apu",
     "public": "web/dist",
     "ignore": [
       "firebase.json",

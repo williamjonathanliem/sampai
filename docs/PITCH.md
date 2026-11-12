@@ -2,10 +2,10 @@
 
 Everything the deck team needs in one place: the story, the numbers, what to show, what to say, what judges will ask, and what's honest to claim. Built for the APU Cloud Innovation Hackathon 2026 (deadline 13 Nov 2026, 12:00 MYT).
 
-- **Live app:** https://sampai-437f3.web.app
-- **Simulator (demo controls):** https://sampai-437f3.web.app/sim
-- **Dashboard:** https://sampai-437f3.web.app/admin
-- **Brand kit (colours, logos, taglines):** https://sampai-437f3.web.app/brand and `BRAND.md`
+- **Live app:** https://sampai-apu.web.app
+- **Simulator (demo controls):** https://sampai-apu.web.app/sim
+- **Dashboard:** https://sampai-apu.web.app/admin
+- **Brand kit (colours, logos, taglines):** https://sampai-apu.web.app/brand and `BRAND.md`
 - **Logo files for slides:** `web/public/brand/` (`sampai-logo.svg` for light slides, `sampai-logo-ink.svg` for dark)
 - **Code:** https://github.com/williamjonathanliem/sampai
 

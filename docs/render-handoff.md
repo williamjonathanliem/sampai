@@ -6,7 +6,7 @@
 
 ## Where things stand
 
-- Web app: Firebase Hosting, https://sampai-437f3.web.app (`npm run deploy:web` from a laptop with `web/.env.production`).
+- Web app: Firebase Hosting, https://sampai-apu.web.app (`npm run deploy:web` from a laptop with `web/.env.production`).
 - Database, sign-in, push: Firebase project `sampai-437f3`, Spark plan.
 - api + worker: **not deployed yet.** That's this task.
 - Without the api, the site loads but route options, address search, reports and the simulator fail.
@@ -19,7 +19,7 @@
 4. **Fill the blank env vars:**
    - `GEMINI_API_KEY` on both (AI Studio key, free; the same one in `api/.env` locally).
    - `WORKER_URL` on the api: the worker's Render URL, e.g. `https://sampai-worker.onrender.com`.
-   - `PUBLIC_WEB_URL` on both: https://sampai-437f3.web.app (used in report QR codes).
+   - `PUBLIC_WEB_URL` on both: https://sampai-apu.web.app (used in report QR codes).
 5. **Deploy both.** Check `https://<api>.onrender.com/net` returns JSON.
 6. **Point the web app at the api.** In `web/.env.production`: `VITE_API_URL=https://<api>.onrender.com`, then `npm run deploy:web`.
 7. **Firestore rules and indexes**, if not done yet: `npx firebase-tools deploy --only firestore --project sampai-437f3` (works on Spark).

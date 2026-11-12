@@ -70,7 +70,7 @@ Copy each `.env.example` to `.env` (or `.env.production` for the web build) and 
 
 ## Deploy
 
-**Web app: Firebase Hosting (free on Spark).** Live at https://sampai-437f3.web.app. `firebase.json` serves `web/dist` with deep links falling back to `index.html`. Build-time settings come from `web/.env.production` (Firebase web config + `VITE_API_URL`, git-ignored). Deploy from your laptop:
+**Web app: Firebase Hosting (free on Spark).** Live at https://sampai-apu.web.app. `firebase.json` serves `web/dist` with deep links falling back to `index.html`. Build-time settings come from `web/.env.production` (Firebase web config + `VITE_API_URL`, git-ignored). Deploy from your laptop:
 
 ```bash
 npx firebase-tools login
