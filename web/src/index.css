@@ -128,29 +128,6 @@ body {
   .press:active:not(:disabled) { transform: none; }
 }
 
-/* ---------- landing: stall scene (9 s loop) ---------- */
-.scene-rider { fill: var(--color-go); stroke: var(--color-brand); stroke-width: 4; animation: rider 9s var(--ease-out) infinite, rider-color 9s linear infinite; }
-.scene-rider-0 { --to: 286px; }
-.scene-rider-1 { --to: 324px; animation-delay: 0.15s; }
-.scene-rider-2 { --to: 362px; animation-delay: 0.3s; }
-@keyframes rider {
-  0% { transform: translateX(0); opacity: 0; }
-  6% { opacity: 1; }
-  40%, 92% { transform: translateX(var(--to)); opacity: 1; }
-  100% { transform: translateX(var(--to)); opacity: 0; }
-}
-@keyframes rider-color { 0%, 42% { fill: var(--color-go); } 46%, 100% { fill: var(--color-stop); } }
-.scene-stall { opacity: 0; animation: stall 9s linear infinite; }
-@keyframes stall { 0%, 44% { opacity: 0; } 48%, 54%, 62%, 70%, 78%, 86% { opacity: 1; } 51%, 58%, 66%, 74%, 82% { opacity: .55; } 92%, 100% { opacity: 0; } }
-.scene-alert { opacity: 0; animation: alert 9s var(--ease-out) infinite; }
-@keyframes alert { 0%, 52% { opacity: 0; transform: translateY(14px) scale(.98); } 57%, 93% { opacity: 1; transform: none; } 97%, 100% { opacity: 0; transform: translateY(-6px); } }
-
-@media (prefers-reduced-motion: reduce) {
-  .scene-rider, .scene-stall, .scene-alert { animation: none; }
-  .scene-rider { fill: var(--color-stop); transform: translateX(var(--to)); }
-  .scene-stall, .scene-alert { opacity: 1; }
-}
-
 /* ---------- landing + brand page ---------- */
 .lp h1, .lp h2, .lp h3 { text-wrap: balance; }
 .lp p, .lp li, .lp dd { text-wrap: pretty; }
