@@ -146,7 +146,7 @@ export default function Admin() {
 
       <main className="intro-stagger mx-auto max-w-6xl px-5 pb-16 pt-8" style={{ "--d": "100ms" } as CSSProperties}>
         <h1 className="text-[26px] font-bold tracking-[-0.02em]">Disruptions</h1>
-        <p className="mt-1 max-w-[70ch] text-[15px] text-muted">Detected from riders' phones, Rapid KL live bus GPS and MET warnings. Each change is also streamed to BigQuery for Looker Studio.</p>
+        <p className="mt-1 max-w-[70ch] text-[15px] text-muted">Detected from riders' phones, Rapid KL live bus GPS and MET warnings. On Google Cloud, each change also streams to BigQuery for Looker Studio.</p>
 
         <dl className="mt-6 grid grid-cols-2 overflow-hidden rounded-2xl border border-line bg-surface md:grid-cols-4">
           {summary.map((s, i) => (

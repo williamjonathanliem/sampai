@@ -63,8 +63,8 @@ export default function Onboard() {
                 <button disabled={!uid || !!saving} onClick={() => pickProfile(p)} className="flex w-full items-center gap-3.5 px-4 py-4 text-left transition-colors hover:bg-sunken/60 disabled:opacity-60 lg:px-8">
                   <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-soft text-[17px] font-bold text-brand">{p.displayName[0]}</span>
                   <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-2">
-                      <span className="font-semibold">{p.displayName}</span>
+                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="whitespace-nowrap font-semibold">{p.displayName}</span>
                       <SimTag />
                       {"late" in p && p.late && <Badge tone="stop">Running late</Badge>}
                       <span className="text-xs text-muted">{p.lang === "ms" ? "Bahasa Melayu" : "English"}</span>

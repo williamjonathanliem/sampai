@@ -123,8 +123,10 @@ export default function Home() {
   const shuttleFrom = usesShuttle ? (/^SP\d+$/.test(legs[shuttleIdx].from ?? "") ? "LRT - Bukit Jalil" : legs[shuttleIdx].from ?? "LRT - Bukit Jalil") : null;
   const preShuttleMin = usesShuttle ? legs.slice(0, shuttleIdx).reduce((s, l) => s + (l.minutes ?? 0), 0) : 0;
   // with a shuttle the plan works backwards from real departures; otherwise class minus trip minus 5 min buffer
-  const leaveTs = plan?.leaveTs ?? (cls ? cls.startTs - (routeMin + 5) * 60_000 : null);
-  const leaveBy = plan?.leaveBy ?? (cls ? minToHhmm(hhmmToMin(cls.start) - routeMin - 5) : null);
+  // a shuttle plan that can't make class (e.g. no shuttle until morning) must not set the leave time
+  const usablePlan = plan && !plan.late ? plan : null;
+  const leaveTs = usablePlan?.leaveTs ?? (cls ? cls.startTs - (routeMin + 5) * 60_000 : null);
+  const leaveBy = usablePlan?.leaveBy ?? (cls ? minToHhmm(hhmmToMin(cls.start) - routeMin - 5) : null);
   const minsToLeave = leaveTs != null ? Math.round((leaveTs - now) / 60_000) : null;
   const classDay = cls ? myt(cls.startTs).date : null;
   const today = myt(now).date;
@@ -372,7 +374,7 @@ export default function Home() {
                     <div className="flex items-center gap-2">
                       <BusFront size={16} className="shrink-0 text-muted" />
                       <span className="text-muted">
-                        Catch the <span className="tnum font-semibold text-fg">{plan.shuttle}</span> APU shuttle from {legs[shuttleIdx]?.label?.replace(/^APU shuttle from /, "") || "LRT Bukit Jalil"}
+                        Catch the <span className="tnum font-semibold text-fg">{plan.shuttle}</span> APU shuttle from {/^APU shuttle from /.test(legs[shuttleIdx]?.label ?? "") ? legs[shuttleIdx].label!.replace(/^APU shuttle from /, "") : "LRT Bukit Jalil"}
                       </span>
                       <span className={`tnum ml-auto font-semibold ${plan.late ? "text-stop" : "text-fg"}`}>arr. {plan.arrive}</span>
                     </div>

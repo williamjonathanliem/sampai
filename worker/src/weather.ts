@@ -111,7 +111,14 @@ export async function pollWeather() {
 }
 
 /** One active weather incident at a time, opened/closed by KL-relevant MET warnings (real or simulated). */
-export async function syncWeatherIncident(w: { title: string; text: string; simulated?: boolean } | null) {
+/** One sync at a time: two polls landing together used to open two identical weather incidents. */
+let syncing: Promise<void> = Promise.resolve();
+export function syncWeatherIncident(w: { title: string; text: string; simulated?: boolean } | null) {
+  syncing = syncing.then(() => syncWeatherIncidentNow(w)).catch((e) => console.warn(`[weather] incident sync failed: ${e.message}`));
+  return syncing;
+}
+
+async function syncWeatherIncidentNow(w: { title: string; text: string; simulated?: boolean } | null) {
   const snap = await db.collection("incidents").where("type", "==", "weather").where("status", "==", "active").get();
   const existing = snap.docs[0];
   if (w && !existing) {

@@ -207,7 +207,7 @@ Conditions: feels-like ${cond?.heat?.apparentTemp ?? "unknown"}°C, rain probabi
 Options (arrivalTime = estimated arrival at campus): ${JSON.stringify(options.map((o) => ({ id: o.id, type: o.type, label: o.label, detail: o.detail, arrivalTime: o.arrivalTime, onTime: o.onTime, fareRM: o.fareEstimate })))}
 
 Pick the best option for arriving on time and staying safe and comfortable (avoid long walks in heat or rain; prefer cheaper options when arrival is similar).
-Write in ${user.lang === "ms" ? "Bahasa Melayu" : "English"}. Use plain words, no emojis.
+Write in ${user.lang === "ms" ? "Bahasa Melayu" : "English"}. Use plain words, no emojis. Call ride-hailing a "taxi" (never a brand name such as Grab).
 Return JSON: { "title": "<max 60 chars>", "body": "<max 160 chars, include the arrival time and whether they make the class>", "bestOptionId": "<id>", "why": "<one sentence>" }`;
 }
 

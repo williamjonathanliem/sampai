@@ -143,7 +143,7 @@ export function LiveNow({ className = "", style }: { className?: string; style?:
           )}
         </Row>
 
-        <Row icon={<CloudRain size={16} />} label="Weather at APU" source="Open-Meteo and MET Malaysia">
+        <Row icon={<CloudRain size={16} />} label="Weather at APU" source="Open-Meteo or MET Norway, and MET Malaysia">
           {cond.state === "loading" ? (
             <Skeleton w="w-52" />
           ) : cond.state === "error" ? (

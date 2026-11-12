@@ -168,10 +168,10 @@ async function gather(inc: Incident, r: LetterRequest, ms: boolean, self = false
       w.rainProb != null ? (ms ? `kebarangkalian hujan ${Math.round(w.rainProb)}% dalam sejam berikutnya` : `${/^(8|11|18)/.test(String(Math.round(w.rainProb))) ? "an" : "a"} ${Math.round(w.rainProb)}% chance of rain in the following hour`) : null,
       w.apparentTemp != null ? (ms ? `suhu terasa ${Math.round(w.apparentTemp)}°C` : `an apparent temperature of ${Math.round(w.apparentTemp)}°C`) : null,
     ].filter(Boolean);
-    findings.push({ text: ms ? `Ramalan cuaca di APU pada ${fmtMyt(inc.startedAt)}: ${bits.join(", ")}.` : `Weather at APU at ${fmtMyt(inc.startedAt)}: ${bits.join(" and ")}.`, source: "Open-Meteo" });
+    findings.push({ text: ms ? `Ramalan cuaca di APU pada ${fmtMyt(inc.startedAt)}: ${bits.join(", ")}.` : `Weather at APU at ${fmtMyt(inc.startedAt)}: ${bits.join(" and ")}.`, source: "Open-Meteo forecast, or MET Norway when Open-Meteo is unavailable" });
   }
 
-  const disrupted = findings.some((f) => !/Open-Meteo/.test(f.source));
+  const disrupted = findings.some((f) => !/Open-Meteo|MET Norway/.test(f.source));
   if (self && !disrupted) {
     findings.unshift({
       text: ms
