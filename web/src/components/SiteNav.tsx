@@ -131,7 +131,8 @@ const NO_IDS: string[] = [];
 /** Off the landing page the nav is desktop only: phones and tablets keep each page's own header. */
 export function Nav() {
   const { pathname } = useLocation();
-  const onLanding = pathname === "/welcome";
+  // the landing page lives at "/" (and still answers at /welcome)
+  const onLanding = pathname === "/" || pathname === "/welcome";
   const uid = useUid();
   const user = useUserDoc(uid);
   const appHref = user ? "/app" : "/onboard";
@@ -163,7 +164,7 @@ export function Nav() {
               <Logo size={28} animated />
             </button>
           ) : (
-            <Link to="/welcome" aria-label="Sampai home" className="mr-auto rounded-lg">
+            <Link to="/" aria-label="Sampai home" className="mr-auto rounded-lg">
               <Logo size={28} animated />
             </Link>
           )}
@@ -176,7 +177,7 @@ export function Nav() {
                     {n.label}
                   </Anchor>
                 ) : (
-                  <Link to={`/welcome#${n.id}`} data-nav={n.id} className={linkClass(n.id)}>
+                  <Link to={`/#${n.id}`} data-nav={n.id} className={linkClass(n.id)}>
                     {n.label}
                   </Link>
                 )}

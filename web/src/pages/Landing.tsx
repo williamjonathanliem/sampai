@@ -20,6 +20,7 @@ import {
 import { Logo } from "../components/Logo";
 import { Anchor, Nav, NAV_IDS, goTo } from "../components/SiteNav";
 import { HeroMap } from "../components/HeroMap";
+import { useReveal } from "../lib/useReveal";
 import SideFlow from "../components/SideFlow";
 import { useUid, useUserDoc } from "../lib/hooks";
 
@@ -48,28 +49,6 @@ const faqs: { q: string; a: string }[] = [
 ];
 
 /* --------------------------------------------------------------- hooks */
-
-/** Sections rise 32px and fade in once, when they enter the viewport. */
-function useReveal(root: React.RefObject<HTMLElement | null>) {
-  useEffect(() => {
-    const els = root.current?.querySelectorAll<HTMLElement>("[data-reveal]");
-    if (!els?.length) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (!e.isIntersecting) continue;
-          e.target.classList.add("is-in");
-          io.unobserve(e.target);
-        }
-      },
-      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" },
-    );
-    els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  }, [root]);
-}
-
-/* ----------------------------------------------------------- components */
 
 /** Large tagline. Words go from muted to full in reading order as the section scrolls up. */
 function TaglineReveal({ lines }: { lines: string[] }) {
@@ -526,19 +505,19 @@ export default function Landing() {
           <nav aria-label="Product">
             <h2 className="caption-3 uppercase tracking-wider text-muted">Product</h2>
             <ul className="mt-4 space-y-2 body-6">
-              <li><Link to={appHref} className="text-fg/80 hover:text-fg">Student app</Link></li>
-              <li><Link to="/sim" className="text-fg/80 hover:text-fg">Simulator</Link></li>
-              <li><Link to="/admin" className="text-fg/80 hover:text-fg">Dashboard</Link></li>
-              <li><Link to="/brand" className="text-fg/80 hover:text-fg">Brand kit</Link></li>
+              <li><Link to={appHref} className="text-fg/80 transition-colors duration-300 ease-brand hover:text-fg">Student app</Link></li>
+              <li><Link to="/sim" className="text-fg/80 transition-colors duration-300 ease-brand hover:text-fg">Simulator</Link></li>
+              <li><Link to="/admin" className="text-fg/80 transition-colors duration-300 ease-brand hover:text-fg">Dashboard</Link></li>
+              <li><Link to="/brand" className="text-fg/80 transition-colors duration-300 ease-brand hover:text-fg">Brand kit</Link></li>
             </ul>
           </nav>
           <nav aria-label="About">
             <h2 className="caption-3 uppercase tracking-wider text-muted">About</h2>
             <ul className="mt-4 space-y-2 body-6">
-              <li><Anchor to="privacy" className="text-fg/80 hover:text-fg">Privacy</Anchor></li>
-              <li><Anchor to="faq" className="text-fg/80 hover:text-fg">FAQ</Anchor></li>
+              <li><Anchor to="privacy" className="text-fg/80 transition-colors duration-300 ease-brand hover:text-fg">Privacy</Anchor></li>
+              <li><Anchor to="faq" className="text-fg/80 transition-colors duration-300 ease-brand hover:text-fg">FAQ</Anchor></li>
               <li>
-                <a href="https://apu-cloud-innovation-hackathon.gdgocapu.com" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-fg/80 hover:text-fg">
+                <a href="https://apu-cloud-innovation-hackathon.gdgocapu.com" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-fg/80 transition-colors duration-300 ease-brand hover:text-fg">
                   Hackathon site <ArrowUpRight size={12} />
                 </a>
               </li>

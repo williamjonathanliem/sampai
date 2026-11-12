@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useMemo, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { ExternalLink, FilePlus2, Database } from "lucide-react";
 import MapView from "../components/MapView";
@@ -144,7 +144,7 @@ export default function Admin() {
         }
       />
 
-      <main className="mx-auto max-w-6xl px-5 pb-16 pt-8">
+      <main className="intro-stagger mx-auto max-w-6xl px-5 pb-16 pt-8" style={{ "--d": "100ms" } as CSSProperties}>
         <h1 className="text-[26px] font-bold tracking-[-0.02em]">Disruptions</h1>
         <p className="mt-1 max-w-[70ch] text-[15px] text-muted">Detected from riders' phones, Rapid KL live bus GPS and MET warnings. Each change is also streamed to BigQuery for Looker Studio.</p>
 

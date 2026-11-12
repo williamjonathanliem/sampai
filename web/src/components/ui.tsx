@@ -1,6 +1,7 @@
-import type { ButtonHTMLAttributes, ReactNode, AnchorHTMLAttributes, InputHTMLAttributes, SelectHTMLAttributes } from "react";
-import { Link, NavLink } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode, type AnchorHTMLAttributes, type InputHTMLAttributes, type SelectHTMLAttributes } from "react";
+import { createPortal } from "react-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
+import { Loader2, X } from "lucide-react";
 import { LogoMark } from "./Logo";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "go";
@@ -106,22 +107,150 @@ export function Wordmark({ className = "", animated = false }: { className?: str
   );
 }
 
-/** Top bar for the operator surfaces (simulator, admin). */
-export function OpsBar({ right }: { right?: ReactNode }) {
+/** Top bar for the operator surfaces (simulator, admin). Phones get a hamburger; `right` moves into its menu. */
+export function OpsBar({ right, badge }: { right?: ReactNode; badge?: ReactNode }) {
   const link = (to: string, label: string) => (
     <NavLink to={to} end className={({ isActive }) => `press rounded-lg px-3 py-1.5 text-[13px] font-semibold ${isActive ? "bg-sunken text-fg" : "text-muted hover:text-fg"}`}>
       {label}
     </NavLink>
   );
   return (
-    <header className="sticky top-0 z-[900] flex h-14 shrink-0 items-center gap-2 border-b border-line bg-surface px-4">
+    <header className="intro-drop sticky top-0 z-[900] flex h-14 shrink-0 items-center gap-2 border-b border-line bg-surface px-4">
       <Wordmark className="mr-3" />
-      <nav className="flex gap-1">
+      <nav className="hidden gap-1 md:flex">
         {link("/sim", "Simulator")}
         {link("/admin", "Dashboard")}
         {link("/app", "Student app")}
       </nav>
-      <div className="ml-auto flex items-center gap-2">{right}</div>
+      <div className="ml-auto flex items-center gap-2">
+        {badge}
+        {right && <div className="hidden items-center gap-2 md:flex">{right}</div>}
+        <MobileMenu
+          className="-mr-2 md:hidden"
+          items={[
+            { label: "Simulator", to: "/sim", end: true },
+            { label: "Dashboard", to: "/admin", end: true },
+            { label: "Student app", to: "/app", end: true },
+          ]}
+          extra={right}
+        />
+      </div>
     </header>
+  );
+}
+
+export type MenuItem = { label: string; to?: string; end?: boolean; onClick?: () => void; icon?: ReactNode; hint?: string };
+
+/**
+ * Phone navigation: a hamburger that opens a full-height panel. The panel is portalled to <body>
+ * so it sits above sticky headers and Leaflet's map controls.
+ */
+export function MobileMenu({ items, extra, className = "" }: { items: MenuItem[]; extra?: ReactNode; className?: string }) {
+  const [open, setOpen] = useState(false);
+  const toggle = useRef<HTMLButtonElement>(null);
+  const close = useRef<HTMLButtonElement>(null);
+  const { pathname } = useLocation();
+
+  // close on navigation
+  useEffect(() => setOpen(false), [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    close.current?.focus();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+      toggle.current?.focus();
+    };
+  }, [open]);
+
+  const row = "flex min-h-12 w-full items-center gap-3 rounded-xl px-2 text-left text-[22px] font-semibold tracking-[-0.01em]";
+
+  return (
+    <>
+      <button
+        ref={toggle}
+        type="button"
+        aria-label="Open menu"
+        aria-expanded={open}
+        aria-controls="app-menu"
+        onClick={() => setOpen(true)}
+        className={`press flex h-11 w-11 items-center justify-center rounded-xl text-fg hover:bg-sunken ${className}`}
+      >
+        <span className="flex w-4 flex-col gap-1.5" aria-hidden>
+          <span className="block h-0.5 w-4 rounded-full bg-current" />
+          <span className="block h-0.5 w-4 rounded-full bg-current" />
+        </span>
+      </button>
+
+      {createPortal(
+        <div
+          id="app-menu"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu"
+          aria-hidden={!open}
+          className={`menu-panel fixed inset-0 z-[1100] flex flex-col bg-surface/95 backdrop-blur-xl ${open ? "open" : ""}`}
+        >
+          <div className="flex h-14 shrink-0 items-center justify-between px-4 pt-[env(safe-area-inset-top)]">
+            <Wordmark />
+            <button ref={close} type="button" aria-label="Close menu" tabIndex={open ? 0 : -1} onClick={() => setOpen(false)} className="press flex h-11 w-11 items-center justify-center rounded-xl text-fg hover:bg-sunken">
+              <X size={20} />
+            </button>
+          </div>
+          <nav className="flex flex-1 flex-col justify-center gap-1 overflow-y-auto px-4 pb-[max(env(safe-area-inset-bottom),24px)]">
+            {items.map((it, i) => {
+              const style = { transitionDelay: open ? `${i * 60}ms` : "0ms" };
+              const inner = (
+                <>
+                  {it.icon && <span className="text-muted">{it.icon}</span>}
+                  <span className="min-w-0 flex-1">
+                    {it.label}
+                    {it.hint && <span className="mt-0.5 block text-[13px] font-medium tracking-normal text-muted">{it.hint}</span>}
+                  </span>
+                </>
+              );
+              if (it.to)
+                return (
+                  <NavLink key={it.label} to={it.to} end={it.end} tabIndex={open ? 0 : -1} style={style} className={({ isActive }) => `menu-link ${row} ${isActive ? "text-brand" : "text-fg hover:bg-sunken"}`}>
+                    {inner}
+                  </NavLink>
+                );
+              if (it.onClick)
+                return (
+                  <button
+                    key={it.label}
+                    type="button"
+                    tabIndex={open ? 0 : -1}
+                    style={style}
+                    onClick={() => {
+                      it.onClick?.();
+                      setOpen(false);
+                    }}
+                    className={`menu-link ${row} text-fg hover:bg-sunken`}
+                  >
+                    {inner}
+                  </button>
+                );
+              return (
+                <div key={it.label} style={style} className={`menu-link ${row} text-muted`}>
+                  {inner}
+                </div>
+              );
+            })}
+            {extra && (
+              <div className="menu-link mt-6 flex flex-wrap items-center gap-3 border-t border-line px-2 pt-6" style={{ transitionDelay: open ? `${items.length * 60}ms` : "0ms" }}>
+                {extra}
+              </div>
+            )}
+          </nav>
+        </div>,
+        document.body,
+      )}
+    </>
   );
 }

@@ -1,8 +1,9 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Check, Copy, DownloadSimple, X } from "@phosphor-icons/react";
 import { Logo, LogoMark } from "../components/Logo";
 import { Nav } from "../components/SiteNav";
+import { useReveal } from "../lib/useReveal";
 
 const colors = [
   { name: "Senja", role: "Primary", meaning: "Dusk violet, the colour of the evening commute. Buttons, selection, focus, the brand moments.", hex: "#5E3EB6", oklch: "oklch(0.47 0.18 290)", fg: "#FDFDFF" },
@@ -74,7 +75,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
 
 function Block({ id, title, body, children }: { id: string; title: string; body?: string; children: ReactNode }) {
   return (
-    <section id={id} aria-labelledby={`${id}-t`} className="border-t border-line py-16">
+    <section id={id} aria-labelledby={`${id}-t`} data-reveal className="border-t border-line py-16">
       <div className="grid gap-8 lg:grid-cols-[1fr_2.4fr] lg:gap-16">
         <div>
           <h2 id={`${id}-t`} className="heading-5 text-fg">{title}</h2>
@@ -87,6 +88,8 @@ function Block({ id, title, body, children }: { id: string; title: string; body?
 }
 
 export default function Brand() {
+  const root = useRef<HTMLDivElement>(null);
+  useReveal(root);
   useEffect(() => {
     const prev = document.title;
     document.title = "Sampai brand kit";
@@ -96,10 +99,10 @@ export default function Brand() {
   }, []);
 
   return (
-    <div className="lp min-h-full bg-bg text-fg">
+    <div ref={root} className="lp min-h-full bg-bg text-fg">
       <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-6 lg:px-8">
         <Nav />
-        <header className="flex items-center justify-between gap-4 py-6 lg:hidden">
+        <header className="intro-drop flex items-center justify-between gap-4 py-6 lg:hidden">
           <Link to="/welcome" className="lp-press inline-flex min-h-11 items-center gap-2 rounded-xl px-3 py-2 button-sm text-muted hover:bg-sunken hover:text-fg">
             <ArrowLeft size={16} /> Back to Sampai
           </Link>
