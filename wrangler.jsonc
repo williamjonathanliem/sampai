@@ -1,0 +1,18 @@
+// Cloudflare Workers (static assets) for the Sampai web app.
+// The repo is an npm workspace, so this root config tells `wrangler deploy` what to ship:
+// build the web workspace, then serve web/dist. Unknown paths fall back to index.html,
+// so deep links like /app, /report and /incident/:id load the single-page app.
+// Build-time variables (VITE_FIREBASE_*, VITE_API_URL) are set in the Cloudflare dashboard:
+// Settings > Build > Variables and secrets. See README.md, "Deploy".
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sampai",
+  "compatibility_date": "2026-11-01",
+  "build": {
+    "command": "npm run build -w web"
+  },
+  "assets": {
+    "directory": "./web/dist",
+    "not_found_handling": "single-page-application"
+  }
+}
