@@ -291,4 +291,12 @@ app.post("/admin/official-note", async (req, res) => {
 });
 
 const PORT = Number(process.env.PORT || 8080);
-app.listen(PORT, () => console.log(`[api] :${PORT} pubsub=${pubsubMode} gemini=${geminiMode} firestore=${usingEmulator ? "emulator" : "gcp"} worker=${WORKER_URL}`));
+app.listen(PORT, () => {
+  console.log(`[api] :${PORT} pubsub=${pubsubMode} gemini=${geminiMode} firestore=${usingEmulator ? "emulator" : "gcp"} worker=${WORKER_URL}`);
+  // Render's free plan sleeps: load the APSpace timetable as soon as we wake, so the first
+  // intake lookup isn't an empty list; retry once if APSpace is slow.
+  timetableStatus()
+    .then((t) => (t.rows ? t : new Promise((r) => setTimeout(r, 15_000)).then(timetableStatus)))
+    .then((t) => console.log(`[api] APSpace timetable: ${t.rows} rows`))
+    .catch(() => null);
+});
