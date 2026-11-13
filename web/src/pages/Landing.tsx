@@ -230,7 +230,7 @@ export default function Landing() {
   const wrap = "mx-auto w-full max-w-[1240px] px-4 sm:px-6 lg:px-8";
 
   return (
-    <div ref={root} className="lp min-h-full bg-bg text-fg">
+    <div ref={root} className="lp min-h-full overflow-x-clip bg-bg text-fg">
       <a href="#main" className="sr-only z-[70] rounded-lg bg-fg px-3 py-2 button-sm text-surface focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
         Skip to content
       </a>
@@ -297,7 +297,7 @@ export default function Landing() {
           <div data-reveal>
             <SectionHead title={<span id="benefits-title">When the line stops, you already know what to do</span>} />
           </div>
-          <div data-reveal className="mt-12 grid gap-4 lg:grid-cols-6">
+          <div data-reveal className="mt-12 grid grid-cols-1 gap-4 lg:grid-cols-6">
             <Card className="lg:col-span-4">
               <CardTitle
                 icon={<Broadcast size={20} />}
@@ -305,7 +305,7 @@ export default function Landing() {
                 body="When several riders stop between two stations, Sampai raises an incident and buzzes everyone whose class it affects. No waiting for an announcement."
               />
               <div className="mt-auto pt-6">
-                <div className="flex items-center gap-2 rounded-xl bg-sunken p-4">
+                <div className="flex flex-wrap items-center gap-2 rounded-xl bg-sunken p-4">
                   {["go", "go", "stop", "stop", "stop", "go"].map((t, i) => (
                     <span key={i} className={`h-3 w-3 rounded-full ${t === "stop" ? "bg-stop" : "bg-go"}`} />
                   ))}

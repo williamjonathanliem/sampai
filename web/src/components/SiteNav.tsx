@@ -160,7 +160,7 @@ export function Nav() {
   return (
     <>
       <div className="intro-drop fixed inset-x-0 top-[max(1rem,env(safe-area-inset-top))] z-50 flex justify-center px-4">
-        <nav aria-label="Main" className="flex w-full max-w-[880px] items-center gap-2 rounded-2xl bg-surface/85 p-2 pl-4 ring-1 ring-line backdrop-blur-md">
+        <nav aria-label="Main" className="flex w-full max-w-[880px] items-center gap-2 rounded-2xl bg-surface/95 p-2 pl-4 shadow-sm ring-1 ring-line backdrop-blur-md">
           {onLanding ? (
             <button type="button" onClick={() => goTo(null)} aria-label="Sampai, back to top" className="mr-auto rounded-lg">
               <Logo size={28} animated />
