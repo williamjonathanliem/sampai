@@ -243,11 +243,11 @@ export default function Landing() {
           <div className="grid items-center gap-12 pt-8 lg:grid-cols-[1.15fr_1fr] lg:gap-16 lg:pt-16">
             <div>
               <h1 id="hero-title" className="max-w-[680px] heading-3 sm:heading-2 xl:heading-1">
-                <span className="intro hero-ink block w-fit sm:whitespace-nowrap" style={{ "--d": "120ms" } as CSSProperties}>Your train stopped</span>
+                <span className="intro hero-ink block w-fit sm:whitespace-nowrap" style={{ "--d": "120ms" } as CSSProperties}>Train stalled? Bus stuck?</span>
                 <span className="intro hero-ink block w-fit sm:whitespace-nowrap" style={{ "--d": "220ms" } as CSSProperties}>You'll still get to class</span>
               </h1>
               <p className="intro mt-6 max-w-[680px] body-3 text-muted lg:title-2 lg:font-normal" style={{ "--d": "320ms" } as CSSProperties}>
-                Sampai turns APU students' phones into a live sensor for the LRT. It spots a stalled train, buzzes you with the fastest way to campus, and writes an incident report for your lecturer if you're late anyway.
+                Sampai plans your trip to your real APU class by train, bus, shuttle, walking or taxi. When something breaks, it buzzes you with the fastest way to campus, and writes an incident report for your lecturer if you're late anyway.
               </p>
               <div className="intro mt-8 flex flex-col items-start gap-4" style={{ "--d": "420ms" } as CSSProperties}>
                 <Link to="/onboard" className="lp-press inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand px-3 py-2 button-md text-surface hover:bg-brand-hover">
