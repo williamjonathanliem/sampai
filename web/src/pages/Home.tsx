@@ -272,13 +272,13 @@ export default function Home() {
               onClick={async () => uid && setPush(await enablePush(uid, () => null))}
               aria-label="Turn on alerts"
               title={push === "denied" ? "Notifications are blocked in browser settings" : push === "unsupported" ? "On iPhone, add Sampai to the Home Screen first" : "Turn on alerts"}
-              className={btn("ghost", "sm", "hidden lg:inline-flex lg:w-auto lg:px-3")}
+              className={btn("ghost", "sm", "max-lg:hidden lg:w-auto lg:px-3")}
             >
               {push === "denied" || push === "unsupported" ? <BellOff size={18} /> : <Bell size={18} />}
               <span>Turn on alerts</span>
             </button>
           )}
-          <Link to="/sim" aria-label="Demo tools" title="Simulator and dashboard" className={btn("ghost", "sm", "hidden lg:inline-flex lg:w-auto lg:px-3")}>
+          <Link to="/sim" aria-label="Demo tools" title="Simulator and dashboard" className={btn("ghost", "sm", "max-lg:hidden lg:w-auto lg:px-3")}>
             <SlidersHorizontal size={18} />
             <span>Simulator &amp; dashboard</span>
           </Link>
